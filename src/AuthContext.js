@@ -8,18 +8,22 @@ const AuthProvider = ({ children }) => {
 
   useEffect(() => {
     // Check if the user is authenticated on component mount
-    const token = localStorage.getItem('jwtToken');
+    const token = localStorage.getItem('SSTToken');
     if (token) {
       setIsLoggedIn(true);
     }
   }, []);
 
   const login = () => {
+    const token = localStorage.getItem('SSTToken');
+    if (token) {
+      setIsLoggedIn(true);
+    }
     setIsLoggedIn(true);
   };
 
   const logout = () => {
-    localStorage.removeItem('jwtToken');
+    localStorage.removeItem('SSTToken');
     setIsLoggedIn(false);
   };
 

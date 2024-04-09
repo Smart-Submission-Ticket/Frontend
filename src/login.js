@@ -1,45 +1,60 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from './AuthContext';
-import AuthService from './AuthService';
 
 function Login() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [userType, setUserType] = useState('Student');
   const [error, setError] = useState('');
-  const [isAdmin, setAdmin] = useState(false); // currently default route is set to adminpage as isAdmin is 1
   const navigate = useNavigate();
   const { login } = useAuth();
 
-  const adminchange = () => {
-    // from backend check if the user is admin or not
-    setAdmin(!isAdmin);
-  }
-
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
-    // backend, perform validation and authentication and remember me here
+    const formData = {
+      email,
+      password,
+    };
 
-    // Assuming the backend sends a JWT token upon successful registration
-    const token = 'your_generated_jwt_token';
+    const baseurl = 'https://smart-submission-ticket.gopalsaraf.com';
+    // Determine the URL based on the user type
+    const url = userType === 'Student' ? `${baseurl}/api/login/student` : `${baseurl}/api/login/teacher`;
 
-    // Store the JWT token
-    login(token);
-    AuthService.login(token);
+    try {
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(formData),
+      });
 
-    console.log('Email:', email);
-    console.log('Password:', password);
+      if (response.ok) {
+        const token = response.headers.get('X-Auth-Token'); // Get the token from the response headers
+        localStorage.setItem('SSTToken', token); // Save the token to local storage with the key 'SSTToken'
+        console.log(token);
+        login();
+        console.log('Login successful');
+        console.log('User Type:', userType);
 
-    // Clear the error message
-    setError('');
-
-    if (isAdmin) {
-      navigate('/AdminPage');
-    } else {
-      navigate('/UserPage');
+        if (userType === 'Teacher') {
+          navigate('/AdminPage');
+        } else if (userType === 'Student') {
+          navigate('/UserPage');
+        }
+      } else {
+        throw new Error('Login failed');
+      }
+      console.log(response);
+    } catch (error) {
+      console.error('Login error:', error.message);
+      setError('Login failed. Please check your credentials.');
     }
   };
+
+
 
   return (
     <div
@@ -53,7 +68,7 @@ function Login() {
         <div className="max-w-md w-full p-6  rounded-md shadow-lg bg-blue-100">
           <h2 className="text-3xl font-semibold text-center text-gray-800 mb-6 ">Login</h2>
           <form onSubmit={handleSubmit}>
-            <div className="mb-4 " >
+            <div className="mb-4">
               <label htmlFor="email" className="block text-sm font-medium text-gray-700">
                 Email
               </label>
@@ -69,7 +84,7 @@ function Login() {
               />
               {error && <p className="text-red-500 text-sm mt-1">{error}</p>}
             </div>
-            <div className="mb-6">
+            <div className="mb-4">
               <label htmlFor="password" className="block text-sm font-medium text-gray-700">
                 Password
               </label>
@@ -83,8 +98,22 @@ function Login() {
                 required
               />
             </div>
+            <div className="mb-4">
+              <label htmlFor="userType" className="block text-sm font-medium text-gray-700">
+                User Type
+              </label>
+              <select
+                id="userType"
+                className="mt-1 block w-full rounded-md px-4 py-2 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
+                value={userType}
+                onChange={(e) => setUserType(e.target.value)}
+              >
+                <option value="Student">Student</option>
+                <option value="Teacher">Teacher</option>
+              </select>
+            </div>
             <div className="flex justify-between items-center mb-4">
-            <div>
+              <div>
                 <button
                   type="button"
                   className="text-indigo-600 hover:underline"

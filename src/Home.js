@@ -28,7 +28,7 @@ function Home() {
     <div
       className="flex flex-col items-center justify-center min-h-screen bg-cover bg-center relative"
       style={{
-        backgroundImage: `url('https://pict.edu/images/slider/home1/College%20Photo%2023%20Feb%202023.jpg')`,
+        backgroundImage: `url(${process.env.PUBLIC_URL}/College-Photo-23-Feb-2023.webp)`,
       }}
     >
       {/* Transparent Logo */}
