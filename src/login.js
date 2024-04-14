@@ -5,7 +5,7 @@ import { useAuth } from './AuthContext';
 function Login() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [userType, setUserType] = useState('Student');
+  //const [userType, setUserType] = useState('Student');
   const [error, setError] = useState('');
   const navigate = useNavigate();
   const { login } = useAuth();
@@ -20,10 +20,10 @@ function Login() {
 
     const baseurl = 'https://smart-submission-ticket.gopalsaraf.com';
     // Determine the URL based on the user type
-    const url = userType === 'Student' ? `${baseurl}/api/login/student` : `${baseurl}/api/login/teacher`;
-
+    //const url = userType === 'Student' ? `${baseurl}/api/login/student` : `${baseurl}/api/login/teacher`;
+    const mixurl = `${baseurl}/api/login`;
     try {
-      const response = await fetch(url, {
+      const response = await fetch(mixurl, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -31,21 +31,24 @@ function Login() {
         body: JSON.stringify(formData),
       });
 
+      const userData = await response.json();
+      console.log(userData);
+      console.log(response);
       if (response.ok) {
         const token = response.headers.get('X-Auth-Token'); // Get the token from the response headers
         localStorage.setItem('SSTToken', token); // Save the token to local storage with the key 'SSTToken'
         console.log(token);
         login();
         console.log('Login successful');
-        console.log('User Type:', userType);
+        //console.log('User Type:', userType);
 
-        if (userType === 'Teacher') {
+        if (userData.role === 'teacher') {
           navigate('/AdminPage');
-        } else if (userType === 'Student') {
+        } else if (userData.role === 'student') {
           navigate('/UserPage');
         }
       } else {
-        throw new Error('Login failed');
+        setError(userData.message);
       }
       console.log(response);
     } catch (error) {
@@ -60,7 +63,7 @@ function Login() {
     <div
       className="flex flex-col min-h-screen bg-cover bg-center"
       style={{
-        backgroundImage: `url('https://pict.edu/images/slider/home1/College%20Photo%2023%20Feb%202023.jpg')`,
+        backgroundImage: `url(${process.env.PUBLIC_URL}/College-Photo-23-Feb-2023.webp)`,
       }}
     >
       {/* Login Form */}
@@ -98,7 +101,7 @@ function Login() {
                 required
               />
             </div>
-            <div className="mb-4">
+            {/* <div className="mb-4">
               <label htmlFor="userType" className="block text-sm font-medium text-gray-700">
                 User Type
               </label>
@@ -111,7 +114,7 @@ function Login() {
                 <option value="Student">Student</option>
                 <option value="Teacher">Teacher</option>
               </select>
-            </div>
+            </div> */}
             <div className="flex justify-between items-center mb-4">
               <div>
                 <button

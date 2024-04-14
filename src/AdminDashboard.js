@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { DownloadIcon } from "@heroicons/react/outline";
 import { jsPDF } from "jspdf"; // Import jsPDF
 import Modal from 'react-modal';
-
 import 'jspdf-autotable';
 
 const AdminDashboard = () => {
@@ -13,12 +12,19 @@ const AdminDashboard = () => {
     const [tableData, setTableData] = useState([]);
     const [showTable, setShowTable] = useState(false);
     const [classes, setClasses] = useState({});
-    const [loading, setLoading] = useState(false); // Track loading state
+    const [loading, setLoading] = useState(false); // Track loading state middle one
+    const [loadingtop, setLoadingTop] = useState(false); // Track loading state top one
+
     const [showMenu, setShowMenu] = useState(false);
+    const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+    const [selectedRowData, setSelectedRowData] = useState(null);
+    const [editedRowData, setEditedRowData] = useState([]);
+
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [Subjects, setSubjects] = useState([]);
     const [selectedAssignementUploadSubject, setSelectedAssignementUploadSubject] = useState('');
     const [selectedUnitTestUploadSubject, setSelectedUnitTestUploadSubject] = useState('');
+
     const yearOptions = ['SE', 'TE', 'BE'];
     const divisionOptions = ['09', '10', '11'];
 
@@ -26,44 +32,45 @@ const AdminDashboard = () => {
 
     const isSubmitDisabled = !(selectedYear && selectedDivision && selectedBatch && selectedSubject);
 
-    // Fetch classes data
     useEffect(() => {
-
-        const fetchData = async () => {
-            try {
-                const response = await fetch(`${baseurl}/api/classes`);
-                if (response.ok) {
-                    const data = await response.json();
-                    setClasses(data);
-                    console.log('Classes fetched successfully')
-                } else {
-                    console.error('Failed to fetch classes');
+            const fetchData = async () => {
+                try {
+                    const response = await fetch(`${baseurl}/api/classes`);
+                    if (response.ok) {
+                        const data = await response.json();
+                        setClasses(data);
+                        console.log('Classes fetched successfully')
+                    } else {
+                        console.error('Failed to fetch classes');
+                    }
+                } catch (error) {
+                    console.error('Error fetching classes:', error);
                 }
-            } catch (error) {
-                console.error('Error fetching classes:', error);
-            }
-        };
-        fetchData();
-    }, []);
+            };
+            fetchData();
+        
+    }, [selectedYear]);
 
     useEffect(() => {
-        const fetchSubjects = async () => {
-            try {
-                const response = await fetch(`${baseurl}/api/classes/subjects`);
-                if (response.ok) {
-                    const data = await response.json();
-                    setSubjects(data);
-                    console.log(data);
-                    console.log('Subjects fetched successfully');
-                } else {
-                    console.error('Failed to fetch subjects');
+            const fetchSubjects = async () => {
+                try {
+                    const response = await fetch(`${baseurl}/api/classes/subjects`);
+                    if (response.ok) {
+                        const data = await response.json();
+                        setSubjects(data);
+                        console.log(data);
+                        console.log('Subjects fetched successfully');
+                    } else {
+                        console.error('Failed to fetch subjects');
+                    }
+                } catch (error) {
+                    console.error('Error fetching subjects:', error);
                 }
-            } catch (error) {
-                console.error('Error fetching subjects:', error);
-            }
-        };
-        fetchSubjects();
-    }, []);
+            };
+            fetchSubjects();
+        
+    }, [selectedYear]);
+
 
     const generateBatchOptions = () => {
         if (selectedYear && selectedDivision) {
@@ -133,35 +140,70 @@ const AdminDashboard = () => {
             for (const key in userData.students) {
                 if (userData.students.hasOwnProperty(key)) {
                     const user = userData.students[key];
-                    const unitTests = user.unitTests[selectedSubject];
-                    const exUT1 = unitTests ? unitTests.ut1Alternate : false;
-                    const exUT2 = unitTests ? unitTests.ut2Alternate : false;
-                    const letter = user.attendanceAlternate || false;
-                    const overall = exUT1 && exUT2 && letter;
+                    if (user.unitTests) {
+                        const unitTests = user.unitTests[selectedSubject];
+                        const exUT1 = unitTests ? unitTests.ut1Alternate : false;
+                        const exUT2 = unitTests ? unitTests.ut2Alternate : false;
+                        const letter = user.attendanceAlternate || false;
+                        const overall = exUT1 && exUT2 && letter;
 
-                    data.push({
-                        name: user.name || 'NA',
-                        rollNo: key,
-                        unitTest1Marks: unitTests ? unitTests.ut1 : 'NA',
-                        exAssmt1: exUT1,
-                        unitTest2Marks: unitTests ? unitTests.ut2 : 'NA',
-                        exAssmt2: exUT2,
-                        attendancePercentage: user.attendance || 'NA',
-                        letter: letter,
-                        overall: overall,
-                    });
+                        data.push({
+                            name: user.name || 'NA',
+                            rollNo: key,
+                            unitTest1Marks: unitTests ? unitTests.ut1 : 'NA',
+                            exAssmt1: exUT1,
+                            unitTest2Marks: unitTests ? unitTests.ut2 : 'NA',
+                            exAssmt2: exUT2,
+                            attendancePercentage: user.attendance || 'NA',
+                            letter: letter,
+                            overall: overall,
+                        });
+                    }
+                    else {
+                        const assignmentsc = user.assignments[selectedSubject] ? user.assignments[selectedSubject].allCompleted : false;
+                        const assignmentnmarks = user.assignments[selectedSubject] ? user.assignments[selectedSubject].marks : [];
+                        const letter = user.attendanceAlternate || false;
+
+                        const overall = assignmentsc && letter;
+                        data.push({
+                            name: user.name || 'NA',
+                            rollNo: key,
+                            assignmentsc: assignmentsc,
+                            assignmentnmarks: assignmentnmarks,
+                            attendancePercentage: user.attendance || 'NA',
+                            letter: letter,
+                            overall: overall
+
+                        });
+
+                    }
+
                 }
             }
         }
+        console.log(data);
         return data;
     };
 
-
     const handleGeneratePDF = (selectedDefaulterList) => {
         const doc = new jsPDF();
-        doc.text(`Defaulters for subject ${selectedSubject} ${selectedDefaulterList}`, doc.internal.pageSize.getWidth() / 2, 10, { align: 'center' });
         doc.setFontSize(12);
-        let yOffset = 30;
+
+        // Add heading
+        doc.setFont('normal');
+        doc.text('PUNE INSTITUTE OF COMPUTER TECHNOLOGY', doc.internal.pageSize.getWidth() / 2, 10, { align: 'center' });
+        doc.text('DHANKAWADI, PUNE – 43', doc.internal.pageSize.getWidth() / 2, 18, { align: 'center' });
+        doc.text('', 10, 26);
+        doc.setFont('bold');
+        doc.text(`Defaulters for subject ${selectedSubject} ${selectedDefaulterList}`, doc.internal.pageSize.getWidth() / 2, 34, { align: 'center' });
+        doc.text('', 10, 42);
+
+        doc.text('Academic Year :- 2023-24', 10, 50, { align: 'left' });
+        doc.text('Semester - 2', doc.internal.pageSize.getWidth() - 10, 50, { align: 'right' });
+        doc.text(`Department - Information Technology`, 10, 58, { align: 'left' });
+        doc.text(`Class: ${selectedYear}${selectedDivision} ${selectedBatch}`, doc.internal.pageSize.getWidth() - 10, 58, { align: 'right' });
+        doc.setFont('normal');
+        let yOffset = 66;
 
         let metric;
         if (selectedDefaulterList === 'Unit Test 1') {
@@ -173,21 +215,10 @@ const AdminDashboard = () => {
         } else if (selectedDefaulterList === 'Overall') {
             metric = 'overall';
         } else {
-            metric = 'overall'; // Default value
+            metric = 'overall';
         }
 
-
         const defaulters = tableData.filter((data) => !data[metric]);
-
-        const classInfo = `Class: ${selectedYear}${selectedDivision}`;
-        const batchInfo = `Batch: ${selectedBatch}`;
-        const classBatchWidth = doc.getStringUnitWidth(classInfo) * doc.internal.getFontSize() / doc.internal.scaleFactor + doc.getStringUnitWidth(batchInfo) * doc.internal.getFontSize() / doc.internal.scaleFactor + 5;
-        const classX = doc.internal.pageSize.getWidth() / 2 - classBatchWidth / 2;
-
-        doc.text(classInfo, classX, yOffset, { align: 'left' });
-        doc.text(batchInfo, classX + doc.getStringUnitWidth(classInfo) * doc.internal.getFontSize() / doc.internal.scaleFactor + 5, yOffset, { align: 'left' });
-
-        yOffset += 20;
 
         doc.autoTable({
             startY: yOffset,
@@ -199,6 +230,7 @@ const AdminDashboard = () => {
                 cellPadding: 3,
                 lineColor: 200,
                 lineWidth: 0.1,
+                halign: 'center', // Center align the table data
             },
             columnStyles: {
                 0: { cellWidth: 'auto' },
@@ -211,9 +243,8 @@ const AdminDashboard = () => {
             },
         });
 
-        doc.save(`defaulter_list ${selectedSubject} ${selectedDefaulterList}.pdf`);
+        doc.save(`defaulter_list ${selectedSubject} ${selectedDefaulterList} ${selectedDivision} ${selectedBatch}.pdf`);
     };
-
 
     const handleSubmit = async () => {
         setShowTable(false);
@@ -257,6 +288,7 @@ const AdminDashboard = () => {
         formData.append('file', file);
         console.log(file);
         try {
+            setLoadingTop(true);
             const response = await fetch(`${baseurl}/api/submit/classes`, {
                 method: 'POST',
                 body: formData,
@@ -271,13 +303,16 @@ const AdminDashboard = () => {
             }
         } catch (error) {
             console.error('Error uploading Classes:', error);
+            alert('Error uploading Classes:', error);
         }
+        setLoadingTop(false);
     };
 
     const uploadStudents = async (file) => {
         const formData = new FormData();
         formData.append('file', file);
         console.log(file);
+        setLoadingTop(true);
         try {
             const response = await fetch(`${baseurl}/api/submit/students`, {
                 method: 'POST',
@@ -294,13 +329,17 @@ const AdminDashboard = () => {
         } catch (error) {
             console.error('Error uploading Students:', error);
         }
+        setLoadingTop(false);
     };
 
     const uploadAttendance = async (file) => {
         const formData = new FormData();
         formData.append('file', file);
         console.log(file);
+        setLoadingTop(true);
+
         try {
+            
             const response = await fetch(`${baseurl}/api/submit/attendance`, {
                 method: 'POST',
                 body: formData,
@@ -316,12 +355,15 @@ const AdminDashboard = () => {
         } catch (error) {
             console.error('Error uploading attendance:', error);
         }
+        setLoadingTop(false);
     };
 
     const uploadCurriculum = async (file) => {
         const formData = new FormData();
         formData.append('file', file);
         console.log(file);
+        setLoadingTop(true);
+
         try {
             const response = await fetch(`${baseurl}/api/submit/curriculum`, {
                 method: 'POST',
@@ -337,12 +379,15 @@ const AdminDashboard = () => {
         } catch (error) {
             console.error('Error uploading curriculum:', error);
         }
+        setLoadingTop(false);
+
     };
 
     const uploadAssignments = async (subject, file) => {
         const formData = new FormData();
         formData.append('subject', subject);
         formData.append('file', file);
+        setLoadingTop(true);
 
         try {
             const response = await fetch(`${baseurl}/api/submit/assignments`, {
@@ -360,12 +405,15 @@ const AdminDashboard = () => {
         } catch (error) {
             console.error('Error uploading assignments:', error);
         }
+        setLoadingTop(false);
+
     };
 
     const uploadUnitTestMarks = async (subject, file) => {
         const formData = new FormData();
         formData.append('subject', subject);
         formData.append('file', file);
+        setLoadingTop(true);
 
         try {
             const response = await fetch(`${baseurl}/api/submit/utmarks`, {
@@ -382,14 +430,164 @@ const AdminDashboard = () => {
         } catch (error) {
             console.error('Error uploading unit test marks:', error);
         }
+        setLoadingTop(false);
+
     };
+
+    const handleEdit = (data) => {
+        setSelectedRowData(data);
+        setIsEditModalOpen(true);
+    };
+
+    // Function to handle changes in the input fields
+    const handleInputChange = (e) => {
+        const { id, value, type, checked } = e.target;
+        setEditedRowData((prevData) => ({
+            ...prevData,
+            [id]: type === 'checkbox' ? !prevData?.[id] : value,
+        }));
+    };
+
+
+
+    // Function to handle saving the edited data
+    const handleSave = async () => {
+        setLoadingTop(true);
+        try {
+            const token = localStorage.getItem('SSTToken');
+            const promises = [];
+
+            // First API call to update attendance
+            if (editedRowData.attendancePercentage || editedRowData.letter) {
+                const attendanceData = [
+                    {
+                        rollNo: selectedRowData.rollNo,
+                        ...(editedRowData.attendancePercentage && { attendance: parseInt(editedRowData.attendancePercentage) }),
+                        ...(editedRowData.letter && { attendanceAlternate: editedRowData.letter }),
+                    },
+                ];
+                const attendancePromise = fetch(`${baseurl}/api/records/update/attendance`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'x-auth-token': ` ${token}`,
+                    },
+                    body: JSON.stringify({ attendance: attendanceData }),
+                });
+                promises.push(attendancePromise);
+            }
+
+            const hasFieldsToSave = ['exAssmt1', 'exAssmt2', 'unitTest1Marks', 'unitTest2Marks'].some((field) => editedRowData[field]);
+            console.log(hasFieldsToSave, editedRowData);
+            // Second API call to update other fields
+            if (hasFieldsToSave) {
+                const utmarksData = {};
+                ['exAssmt1', 'exAssmt2', 'unitTest1Marks', 'unitTest2Marks'].forEach((field) => {
+                    if (editedRowData[field]) {
+                        if (field === 'exAssmt1') {
+                            utmarksData.ut1Alternate = editedRowData[field];
+                        } else if (field === 'exAssmt2') {
+                            utmarksData.ut2Alternate = editedRowData[field];
+                        } else if (field === 'unitTest1Marks') {
+                            utmarksData.ut1 = parseInt(editedRowData[field]);
+                        } else if (field === 'unitTest2Marks') {
+                            utmarksData.ut2 = parseInt(editedRowData[field]);
+                        }
+                    }
+                });
+
+                const utmarksPromise = fetch(`${baseurl}/api/records/update/utmarks/${selectedSubject}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'x-auth-token': ` ${token}`,
+                    },
+                    body: JSON.stringify({ utmarks: [{ rollNo: selectedRowData.rollNo, ...utmarksData }] }),
+                });
+                promises.push(utmarksPromise);
+            }
+
+            // Execute both promises in parallel
+            const responses = await Promise.all(promises);
+            responses.forEach(async (response) => {
+                const userData = await response.json();
+                if (response.ok) {
+                    alert(userData.message);
+                    // Update tableData with editedRowData
+                    setTableData((prevData) => {
+                        return prevData.map((data) => {
+                            if (data.rollNo === selectedRowData.rollNo) {
+                                return {
+                                    ...data,
+                                    ...editedRowData,
+                                };
+                            }
+                            return data;
+                        });
+                    });
+                } else {
+                    alert(userData.message);
+                }
+            });
+
+            // Reset editedRowData and close modal
+            setEditedRowData(null);
+            setIsEditModalOpen(false);
+        } catch (error) {
+            console.error('Error updating records:', error);
+            // Handle error
+        }
+        setLoadingTop(false);
+    };
+
+    const fetchData = async () => {
+        setLoading(true);
+        try {
+            const token = localStorage.getItem('SSTToken');
+            const urls = [
+                `${baseurl}/api/fetch/classes`,
+                `${baseurl}/api/fetch/students`,
+                `${baseurl}/api/fetch/curriculum`,
+                `${baseurl}/api/fetch/attendance`
+            ];
+
+            const requests = urls.map(url => fetch(url, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'x-auth-token': token
+                }
+            }));
+
+            const responses = await Promise.all(requests);
+            const data = await Promise.all(responses.map(response => response.json()));
+            data.forEach(item => {
+                if (Array.isArray(item)) {
+                    item.forEach(subItem => {
+                        alert(subItem.message);
+                    });
+                } else {
+                    alert(item.message);
+                }
+            });
+        } catch (error) {
+            console.error('Error fetching data:', error);
+            // Handle error
+        }
+        setLoading(false);
+    };
+
+
     const openModal = () => {
         setIsModalOpen(true);
     };
 
     const closeModal = () => {
         setIsModalOpen(false);
+        setIsEditModalOpen(false);
     };
+
+    console.log("edited row", editedRowData);
     return (
         <div className="admin-dashboard-container mx-3 p-4 bg-blue-100 min-h-screen rounded-md">
             <div className="flex space-x-6 mb-4">
@@ -508,6 +706,7 @@ const AdminDashboard = () => {
                 </div>
                 <button
                     className={`bg-green-500 text-white p-1 rounded-md cursor-pointer`}
+                    onClick={fetchData}
                 >
                     Fetch Data <DownloadIcon className="ml-3 w-5 h-5" />
                 </button>
@@ -546,6 +745,169 @@ const AdminDashboard = () => {
                     </div>
                     <div className="modal-content max-h-96 overflow-y-auto" style={{ paddingRight: '15px' }}>
                         <div className="border-b-2 border-black pb-4 mb-4">
+                            <h2 className="text-xl font-bold mb-4">Upload Attendance</h2>
+                            <p className="mb-4">
+                                Demo File:{" "}
+                                <a href="/Attendance.xlsx" download className="text-blue-500">
+                                    Attendance.xlsx
+                                </a>
+                            </p>
+                            <div className="flex justify-between items-center mb-4">
+                                <input id="attendanceFileInput" type="file" accept=".xlsx" className="mr-2" />
+                                <button
+                                    className="bg-green-500 text-white px-4 py-2 rounded-md mr-2"
+                                    onClick={() => {
+                                        const fileInput = document.getElementById('attendanceFileInput');
+                                        if (fileInput) {
+                                            fileInput.value = null;
+                                        }
+                                    }}
+                                >
+                                    Cancel
+                                </button>
+                                <button
+                                    className="bg-blue-500 text-white px-4 py-2 rounded-md"
+                                    onClick={async () => {
+                                        const fileInput = document.getElementById('attendanceFileInput');
+                                        if (fileInput.files.length > 0) {
+                                            const file = fileInput.files[0];
+                                            uploadAttendance(file);
+                                        } else {
+                                            alert('No file selected');
+                                        }
+                                    }}
+                                >
+                                    Upload
+                                </button>
+                            </div>
+                        </div>
+
+                        <div className="border-b-2 border-black pb-4 mb-4">
+                            <h2 className="text-xl font-bold mb-4">Upload Assignments</h2>
+                            <p className="mb-4">
+                                Demo File:{" "}
+                                <a href="/Assignments Example - WAD N9.xlsx" download className="text-blue-500">
+                                    Assignments Example WAD.xlsx
+                                </a>
+                            </p>
+                            <div className="flex justify-between items-center mb-4">
+                                <input id="assignmentsFileInput" type="file" accept=".xlsx" className="mr-2" />
+
+                                <button
+                                    className="bg-green-500 text-white px-4 py-2 rounded-md mr-2"
+                                    onClick={() => {
+                                        const fileInput = document.getElementById('assignmentsFileInput');
+                                        if (fileInput) {
+                                            fileInput.value = null;
+                                        }
+                                    }}
+                                >
+                                    Cancel
+                                </button>
+                                <button
+                                    className="bg-blue-500 text-white px-4 py-2 rounded-md"
+                                    onClick={() => {
+                                        const fileInput = document.getElementById('assignmentsFileInput');
+                                        if (fileInput && fileInput.files && fileInput.files.length > 0) {
+                                            if (!selectedAssignementUploadSubject) {
+                                                alert('Please select a subject');
+                                                return;
+                                            }
+
+                                            uploadAssignments(selectedAssignementUploadSubject, fileInput.files[0]);
+                                        } else {
+                                            alert('No file selected');
+                                        }
+                                    }}
+                                >
+                                    Upload
+                                </button>
+                            </div>
+                            <div className="relative">
+                                <label className="mr-2">Select Subject:</label>
+                                <select
+                                    name="upload-assignement-subject"
+                                    className={`bg-white border rounded-lg hover:border-gray-500 py-2 px-4 text-gray-700 leading-tight ${!selectedAssignementUploadSubject && 'border-red-500'
+                                        }`}
+                                    value={selectedAssignementUploadSubject}
+                                    onChange={(e) => setSelectedAssignementUploadSubject(e.target.value)}
+                                >
+                                    <option value="">Select Subject</option>
+                                    {generateSubjectOptions().flatMap((subject) =>
+                                        subject.options.practical.map((practicalTitle) => (
+                                            <option key={practicalTitle} value={practicalTitle}>
+                                                {practicalTitle}
+                                            </option>
+                                        ))
+                                    )}
+                                </select>
+                            </div>
+                        </div>
+
+                        <div className="border-b-2 border-black pb-4 mb-4">
+                            <h2 className="text-xl font-bold mb-4">Upload Unit Test Marks</h2>
+                            <p className="mb-4">
+                                Demo File:{" "}
+                                <a href="/Unit Test Marks Example - WAD TE09.xlsx" download className="text-blue-500">
+                                    Unit Test Marks Example - WAD TE09.xlsx
+                                </a>
+                            </p>
+                            <div className="flex justify-between items-center mb-4">
+                                <input id="unitTestMarksFileInput" type="file" accept=".xlsx" className="mr-2" />
+                                <button
+                                    className="bg-green-500 text-white px-4 py-2 rounded-md mr-2"
+                                    onClick={() => {
+                                        const fileInput = document.getElementById('unitTestMarksFileInput');
+                                        if (fileInput) {
+                                            fileInput.value = null;
+                                        }
+                                    }}
+                                >
+                                    Cancel
+                                </button>
+                                <button
+                                    className="bg-blue-500 text-white px-4 py-2 rounded-md"
+                                    onClick={() => {
+                                        const fileInput = document.getElementById('unitTestMarksFileInput');
+                                        const selectedFile = fileInput?.files[0];
+                                        if (!selectedFile) {
+                                            alert('Please select a file');
+                                            return;
+                                        }
+
+                                        if (!selectedUnitTestUploadSubject) {
+                                            alert('Please select a subject');
+                                            return;
+                                        }
+
+                                        uploadUnitTestMarks(selectedUnitTestUploadSubject, selectedFile);
+                                    }}
+                                >
+                                    Upload
+                                </button>
+                            </div>
+                            <div className="relative">
+                                <label className="mr-2">Select Subject:</label>
+                                <select
+                                    name="upload-utmarks-subject"
+                                    className={`bg-white border rounded-lg hover:border-gray-500 py-2 px-4 text-gray-700 leading-tight ${!selectedUnitTestUploadSubject && 'border-red-500'
+                                        }`}
+                                    value={selectedUnitTestUploadSubject}
+                                    onChange={(e) => setSelectedUnitTestUploadSubject(e.target.value)}
+                                >
+                                    <option value="">Select Subject</option>
+                                    {generateSubjectOptions().flatMap((subject) =>
+                                        subject.options.theory.map((theoryTitles) => (
+                                            <option key={theoryTitles} value={theoryTitles}>
+                                                {theoryTitles}
+                                            </option>
+                                        ))
+                                    )}
+                                </select>
+                            </div>
+                        </div>
+
+                        <div className="border-b-2 border-black pb-4 mb-4">
                             <h2 className="text-xl font-bold mb-4">Upload Classes</h2>
                             <p className="mb-4">
                                 Demo File:{" "}
@@ -554,12 +916,14 @@ const AdminDashboard = () => {
                                 </a>
                             </p>
                             <div className="flex justify-between items-center mb-4">
-                                <input type="file" accept=".xlsx" className="mr-2" />
+                                <input id="classesFileInput" type="file" accept=".xlsx" className="mr-2" />
                                 <button
                                     className="bg-green-500 text-white px-4 py-2 rounded-md mr-2"
                                     onClick={() => {
-                                        // Deselect the current file
-                                        document.querySelector('input[type="file"]').value = null;
+                                        const fileInput = document.getElementById('classesFileInput');
+                                        if (fileInput) {
+                                            fileInput.value = null;
+                                        }
                                     }}
                                 >
                                     Cancel
@@ -567,7 +931,7 @@ const AdminDashboard = () => {
                                 <button
                                     className="bg-blue-500 text-white px-4 py-2 rounded-md"
                                     onClick={async () => {
-                                        const fileInput = document.querySelector('input[type="file"]');
+                                        const fileInput = document.getElementById('classesFileInput');
                                         if (fileInput.files.length > 0) {
                                             const file = fileInput.files[0];
                                             uploadClasses(file);
@@ -590,12 +954,14 @@ const AdminDashboard = () => {
                                 </a>
                             </p>
                             <div className="flex justify-between items-center mb-4">
-                                <input type="file" accept=".xlsx" className="mr-2" />
+                                <input id="studentsFileInput" type="file" accept=".xlsx" className="mr-2" />
                                 <button
                                     className="bg-green-500 text-white px-4 py-2 rounded-md mr-2"
                                     onClick={() => {
-                                        // Deselect the current file
-                                        document.querySelectorAll('input[type="file"]')[1].value = null;
+                                        const fileInput = document.getElementById('studentsFileInput');
+                                        if (fileInput) {
+                                            fileInput.value = null;
+                                        }
                                     }}
                                 >
                                     Cancel
@@ -603,7 +969,7 @@ const AdminDashboard = () => {
                                 <button
                                     className="bg-blue-500 text-white px-4 py-2 rounded-md"
                                     onClick={async () => {
-                                        const fileInput = document.querySelectorAll('input[type="file"]')[1];
+                                        const fileInput = document.getElementById('studentsFileInput');
                                         if (fileInput.files.length > 0) {
                                             const file = fileInput.files[0];
                                             uploadStudents(file);
@@ -626,12 +992,14 @@ const AdminDashboard = () => {
                                 </a>
                             </p>
                             <div className="flex justify-between items-center mb-4">
-                                <input type="file" accept=".xlsx" className="mr-2" />
+                                <input id="CurriculumFileInput" type="file" accept=".xlsx" className="mr-2" />
                                 <button
                                     className="bg-green-500 text-white px-4 py-2 rounded-md mr-2"
                                     onClick={() => {
-                                        // Deselect the current file
-                                        document.querySelectorAll('input[type="file"]')[2].value = null;
+                                        const fileInput = document.getElementById('CurriculumFileInput');
+                                        if (fileInput) {
+                                            fileInput.value = null;
+                                        }
                                     }}
                                 >
                                     Cancel
@@ -639,7 +1007,7 @@ const AdminDashboard = () => {
                                 <button
                                     className="bg-blue-500 text-white px-4 py-2 rounded-md"
                                     onClick={async () => {
-                                        const fileInput = document.querySelectorAll('input[type="file"]')[2];
+                                        const fileInput = document.getElementById('CurriculumFileInput');
                                         if (fileInput.files.length > 0) {
                                             const file = fileInput.files[0];
                                             uploadCurriculum(file);
@@ -652,172 +1020,9 @@ const AdminDashboard = () => {
                                 </button>
                             </div>
                         </div>
-                        <div className="border-b-2 border-black pb-4 mb-4">
-                            <h2 className="text-xl font-bold mb-4">Upload Attendance</h2>
-                            <p className="mb-4">
-                                Demo File:{" "}
-                                <a href="/Attendance.xlsx" download className="text-blue-500">
-                                    Attendance.xlsx
-                                </a>
-                            </p>
-                            <div className="flex justify-between items-center mb-4">
-                                <input type="file" accept=".xlsx" className="mr-2" />
-                                <button
-                                    className="bg-green-500 text-white px-4 py-2 rounded-md mr-2"
-                                    onClick={() => {
-                                        // Deselect the current file
-                                        document.querySelectorAll('input[type="file"]')[3].value = null;
-                                    }}
-                                >
-                                    Cancel
-                                </button>
-                                <button
-                                    className="bg-blue-500 text-white px-4 py-2 rounded-md"
-                                    onClick={async () => {
-                                        const fileInput = document.querySelectorAll('input[type="file"]')[3];
-                                        if (fileInput.files.length > 0) {
-                                            const file = fileInput.files[0];
-                                            uploadAttendance(file);
-                                        } else {
-                                            alert('No file selected');
-                                        }
-                                    }}
-                                >
-                                    Upload
-                                </button>
-                            </div>
-                        </div>
-
-                         <div className="border-b-2 border-black pb-4 mb-4">
-                <h2 className="text-xl font-bold mb-4">Upload Assignments</h2>
-                <p className="mb-4">
-                    Demo File:{" "}
-                    <a href="/Assignments Example - WAD N9.xlsx" download className="text-blue-500">
-                        Assignments Example - WAD N9.xlsx
-                    </a>
-                </p>
-                <div className="flex justify-between items-center mb-4">
-                    <input id="assignmentsFileInput" type="file" accept=".xlsx" className="mr-2" />
-
-                    <button
-                        className="bg-green-500 text-white px-4 py-2 rounded-md mr-2"
-                        onClick={() => {
-                            const fileInput = document.getElementById('assignmentsFileInput');
-                            if (fileInput) {
-                                fileInput.value = null;
-                            }
-                        }}
-                    >
-                        Cancel
-                    </button>
-                    <button
-                        className="bg-blue-500 text-white px-4 py-2 rounded-md"
-                        onClick={() => {
-                            const fileInput = document.getElementById('assignmentsFileInput');
-                            if (fileInput && fileInput.files && fileInput.files.length > 0) {
-                                if (!selectedAssignementUploadSubject) {
-                                    alert('Please select a subject');
-                                    return;
-                                }
-
-                                uploadAssignments(selectedAssignementUploadSubject, fileInput.files[0]);
-                            } else {
-                                alert('No file selected');
-                            }
-                        }}
-                    >
-                        Upload
-                    </button>
-                </div>
-                <div className="relative">
-                    <label className="mr-2">Select Subject:</label>
-                    <select
-                        name="upload-assignement-subject"
-                        className={`bg-white border rounded-lg hover:border-gray-500 py-2 px-4 text-gray-700 leading-tight ${!selectedAssignementUploadSubject && 'border-red-500'
-                            }`}
-                        value={selectedAssignementUploadSubject}
-                        onChange={(e) => setSelectedAssignementUploadSubject(e.target.value)}
-                    >
-                        <option value="">Select Subject</option>
-                        {generateSubjectOptions().flatMap((subject) =>
-                            subject.options.practical.map((practicalTitle) => (
-                                <option key={practicalTitle} value={practicalTitle}>
-                                    {practicalTitle}
-                                </option>
-                            ))
-                        )}
-                    </select>
-                </div>
-            </div>
-
-            <div className="border-b-2 border-black pb-4 mb-4">
-                <h2 className="text-xl font-bold mb-4">Upload Unit Test Marks</h2>
-                <p className="mb-4">
-                    Demo File:{" "}
-                    <a href="/Unit Test Marks Example - WAD TE09.xlsx" download className="text-blue-500">
-                        Unit Test Marks Example - WAD TE09.xlsx
-                    </a>
-                </p>
-                <div className="flex justify-between items-center mb-4">
-                    <input id="unitTestMarksFileInput" type="file" accept=".xlsx" className="mr-2" />
-                    <button
-                        className="bg-green-500 text-white px-4 py-2 rounded-md mr-2"
-                        onClick={() => {
-                            const fileInput = document.getElementById('unitTestMarksFileInput');
-                            if (fileInput) {
-                                fileInput.value = null;
-                            }
-                        }}
-                    >
-                        Cancel
-                    </button>
-                    <button
-                        className="bg-blue-500 text-white px-4 py-2 rounded-md"
-                        onClick={() => {
-                            const fileInput = document.getElementById('unitTestMarksFileInput');
-                            const selectedFile = fileInput?.files[0];
-                            if (!selectedFile) {
-                                alert('Please select a file');
-                                return;
-                            }
-
-                            if (!selectedUnitTestUploadSubject) {
-                                alert('Please select a subject');
-                                return;
-                            }
-
-                            uploadUnitTestMarks(selectedUnitTestUploadSubject, selectedFile);
-                        }}
-                    >
-                        Upload
-                    </button>
-                </div>
-                <div className="relative">
-                    <label className="mr-2">Select Subject:</label>
-                    <select
-                        name="upload-utmarks-subject"
-                        className={`bg-white border rounded-lg hover:border-gray-500 py-2 px-4 text-gray-700 leading-tight ${!selectedUnitTestUploadSubject && 'border-red-500'
-                            }`}
-                        value={selectedUnitTestUploadSubject}
-                        onChange={(e) => setSelectedUnitTestUploadSubject(e.target.value)}
-                    >
-                        <option value="">Select Subject</option>
-                        {generateSubjectOptions().flatMap((subject) =>
-                            subject.options.theory.map((theoryTitles) => (
-                                <option key={theoryTitles} value={theoryTitles}>
-                                    {theoryTitles}
-                                </option>
-                            ))
-                        )}
-                    </select>
-                </div>
-            </div>
-
                     </div>
                 </Modal>
-
             </div>
-
 
             {/* Display message when table is not showing */}
             {!showTable && !loading && (
@@ -834,6 +1039,81 @@ const AdminDashboard = () => {
                 </div>
             )}
 
+            
+            {loadingtop && (
+                <div className="fixed top-0 left-0 w-full flex justify-center items-center z-50 mt-20">
+                <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-blue-500"></div>
+            </div>
+)}
+            {/* Modal for editing */}
+            {isEditModalOpen && selectedRowData && (
+                <div className="fixed top-0 left-0 w-full h-full flex items-center justify-center bg-black bg-opacity-50 z-50">
+                    <div className="bg-white rounded-lg p-6 space-y-4">
+                        <h2 className="text-lg font-bold">{`${selectedRowData.name} - ${selectedRowData.rollNo}`}</h2>
+                        <div className="space-y-2">
+                            <div className="flex items-center">
+                                <label htmlFor="ut1" className="mr-4">Unit Test 1 :</label>
+                                <input
+                                    type="text"
+                                    id="unitTest1Marks"
+                                    value={editedRowData?.unitTest1Marks === '' ? '' : editedRowData?.unitTest1Marks || selectedRowData.unitTest1Marks}
+                                    className="border rounded-md p-1"
+                                    onChange={handleInputChange}
+                                />
+                                <label htmlFor="exUt1" className="ml-6 mr-2">Ex.UT1 :</label>
+                                <input
+                                    type="checkbox"
+                                    id="exAssmt1"
+                                    checked={editedRowData ? editedRowData.exAssmt1 : selectedRowData.exAssmt1}
+                                    onChange={handleInputChange}
+                                />
+                            </div>
+                            <div className="flex items-center">
+                                <label htmlFor="ut2" className="mr-4">Unit Test 2 :</label>
+                                <input
+                                    type="text"
+                                    id="unitTest2Marks"
+                                    value={editedRowData?.unitTest2Marks === '' ? '' : editedRowData?.unitTest2Marks || selectedRowData.unitTest2Marks}
+                                    className="border rounded-md p-1"
+                                    onChange={handleInputChange}
+                                />
+                                <label htmlFor="exUt2" className="ml-6 mr-2">Ex.UT2 :</label>
+                                <input
+                                    type="checkbox"
+                                    id="exAssmt2"
+                                    checked={editedRowData ? editedRowData.exAssmt2 : selectedRowData.exAssmt2}
+                                    onChange={handleInputChange}
+                                />
+                            </div>
+                            <div className="flex items-center">
+                                <label htmlFor="attendance" className="mr-4">Attendance :</label>
+                                <input
+                                    type="text"
+                                    id="attendancePercentage"
+                                    value={editedRowData?.attendancePercentage === '' ? '' : editedRowData?.attendancePercentage || selectedRowData.attendancePercentage}
+                                    className="border rounded-md p-1"
+                                    onChange={handleInputChange}
+                                />
+                                <label htmlFor="letter" className="ml-6 mr-2">Letter :</label>
+                                <input
+                                    type="checkbox"
+                                    id="letter"
+                                    checked={editedRowData?.letter || selectedRowData.letter}
+                                    onChange={handleInputChange}
+                                />
+                            </div>
+                        </div>
+                        <div className="flex justify-end">
+                            <button onClick={() => {
+                                setIsEditModalOpen(false);
+                                setEditedRowData(null);
+                            }} className="bg-red-500 hover:bg-red-600 text-white rounded-md px-4 py-2">Cancel</button>
+                            <button onClick={handleSave} className="bg-blue-500 hover:bg-blue-600 text-white rounded-md px-4 py-2 ml-2">Save</button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
             {/* Table Section */}
             {showTable && (
                 <table className="border-collapse w-full mt-8 bg-white rounded-md overflow-hidden">
@@ -842,22 +1122,32 @@ const AdminDashboard = () => {
                             <th className="py-2 px-4">Roll no</th>
                             <th className="py-2 px-4">Name</th>
 
-                            {tableData[0]?.assignments > 0 && (
+                            {tableData[0]?.assignmentnmarks && (
                                 <>
                                     <th className="py-2 px-4">Assignment</th>
-                                    {Array.from({ length: tableData[0]?.assignmentMarks.length || 0 }, (_, i) => (
+                                    {Array.from({ length: tableData[0]?.assignmentnmarks.length || 0 }, (_, i) => (
                                         <th key={i} className="py-2 px-4">A{i + 1}</th>
                                     ))}
                                 </>
                             )}
 
-                            <th className="py-2 px-4" colSpan="12">Unit Test 1</th>
-                            <th className="py-2 px-4" colSpan="12">Ex.UT1</th>
-                            <th className="py-2 px-4" colSpan="12">Unit Test 2</th>
-                            <th className="py-2 px-4" colSpan="12">Ex.UT2</th>
+                            {tableData[0]?.unitTest1Marks && (
+                                <>
+                                    <th className="py-2 px-4" colSpan="12">Unit Test 1</th>
+                                    <th className="py-2 px-4" colSpan="12">Ex.UT1</th>
+                                </>
+                            )}
+
+                            {tableData[0]?.unitTest2Marks && (
+                                <>
+                                    <th className="py-2 px-4" colSpan="12">Unit Test 2</th>
+                                    <th className="py-2 px-4" colSpan="12">Ex.UT2</th>
+                                </>
+                            )}
                             <th className="py-2 px-4" colSpan="2">Attendance</th>
-                            <th className="py-2 px-4" colSpan="2">Letter</th>
-                            <th className="py-2 px-4">Overall</th>
+                            <th className="py-2 px-4" colSpan="2">Justification</th>
+                            <th className="py-2 px-4" colSpan="2">Edit</th>
+                            <th className="py-2 px-4" colSpan="2">Overall</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -866,56 +1156,45 @@ const AdminDashboard = () => {
                                 <td className="py-2 px-4 text-center">{data.rollNo}</td>
                                 <td className="py-2 px-4 text-center">{data.name}</td>
 
-                                {data.assignments > 0 && (
+                                {data.assignmentnmarks && (
                                     <>
                                         <td className="py-2 px-4 text-center">
                                             <input
                                                 type="checkbox"
-                                                checked={data.assignment}
-                                                onChange={() => setTableData((prevData) => {
-                                                    const newData = [...prevData];
-                                                    newData[index].assignment = !data.assignment;
-                                                    return newData;
-                                                })}
+                                                checked={data.assignmentsc}
                                             />
                                         </td>
-                                        {data.assignmentMarks.map((mark, i) => (
+                                        {data.assignmentnmarks.map((mark, i) => (
                                             <td key={i} className="py-2 px-4 text-center">{mark}</td>
                                         ))}
                                     </>
                                 )}
-                                <td className="py-2 px-4 text-center" colSpan="12">
-                                    <span>{data.unitTest1Marks}</span>
-                                </td>
-                                <td className="py-2 px-4 text-center" colSpan="12">
-                                    {data.unitTest1Marks >= 12 ? (
-                                        <input
-                                            type="checkbox"
-                                            checked={true}
-                                        />
-                                    ) : (
-                                        <input
-                                            type="checkbox"
-                                            checked={data.exAssmt1}
-                                        />
-                                    )}
-                                </td>
-                                <td className="py-2 px-4 text-center" colSpan="12">
-                                    <span>{data.unitTest2Marks}</span>
-                                </td>
-                                <td className="py-2 px-4 text-center" colSpan="12">
-                                    {data.unitTest2Marks >= 12 ? (
-                                        <input
-                                            type="checkbox"
-                                            checked={true}
-                                        />
-                                    ) : (
-                                        <input
-                                            type="checkbox"
-                                            checked={data.exAssmt2}
-                                        />
-                                    )}
-                                </td>
+                                {data.unitTest1Marks !== undefined && (
+                                    <>
+                                        <td className="py-2 px-4 text-center" colSpan="12">
+                                            <span>{data.unitTest1Marks}</span>
+                                        </td>
+                                        <td className="py-2 px-4 text-center" colSpan="12">
+                                            <input
+                                                type="checkbox"
+                                                checked={data.exAssmt1}
+                                            />
+                                        </td>
+                                    </>
+                                )}
+                                {data.unitTest2Marks !== undefined && (
+                                    <>
+                                        <td className="py-2 px-4 text-center" colSpan="12">
+                                            <span>{data.unitTest2Marks}</span>
+                                        </td>
+                                        <td className="py-2 px-4 text-center" colSpan="12">
+                                            <input
+                                                type="checkbox"
+                                                checked={data.exAssmt2}
+                                            />
+                                        </td>
+                                    </>
+                                )}
                                 <td className="py-2 px-4 text-center" colSpan="2">
                                     <span>{data.attendancePercentage}</span>
                                 </td>
@@ -932,7 +1211,10 @@ const AdminDashboard = () => {
                                         />
                                     )}
                                 </td>
-                                <td className="py-2 px-4 text-center">
+                                <td className="py-2 px-4 text-center text-indigo-600" colSpan="2">
+                                    <button onClick={() => handleEdit(data)}>Edit</button>
+                                </td>
+                                <td className="py-2 px-4 text-center" colSpan="2">
                                     <input
                                         type="checkbox"
                                         checked={data.overall}

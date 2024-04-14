@@ -53,9 +53,9 @@ const UserDashboard = () => {
       name: subject.title,
       assignment: noofassignments ? noofassignments : 0,
       assignmentMarks: noofassignments ? noofassignments.marks : [],
-      unitTest1Marks: userData.unitTests[subject.title]?.ut1 ?? -1,
+      unitTest1Marks: userData.unitTests[subject.title]?.ut1 ?? 'NA',
       exAssmt1: userData.unitTests[subject.title]?.ut1Alternate ?? false,
-      unitTest2Marks: userData.unitTests[subject.title]?.ut2 ?? -1,
+      unitTest2Marks: userData.unitTests[subject.title]?.ut2 ?? 'NA',
       exAssmt2: userData.unitTests[subject.title]?.ut2Alternate ?? false,
       attendancePercentage: userData.attendance,
       letter: userData.attendanceAlternate,
@@ -76,7 +76,7 @@ const UserDashboard = () => {
     const practicalTableData = practicalSubjects.map((subject) => {
       const assignmentMarks = userData.assignments[subject.title]?.marks ?? [];
       const remainingAssignments = maxAssignments - assignmentMarks.length;
-      const remainingAssignmentMarks = Array.from({ length: remainingAssignments }, (_, i) => -1);
+      const remainingAssignmentMarks = Array.from({ length: remainingAssignments }, (_, i) => 'NA');
       const allAssignmentMarks = [...assignmentMarks, ...remainingAssignmentMarks];
       const letter = userData.attendanceAlternate ?? false;
       const assignmentsCompleted = userData.assignments[subject.title]?.allCompleted ?? false;
@@ -146,7 +146,7 @@ const UserDashboard = () => {
                   <th className="py-2 px-4" colSpan="12">Unit Test 2</th>
                   <th className="py-2 px-4" colSpan="12">Ex.As2</th>
                   <th className="py-2 px-4" colSpan="2">Attendance</th>
-                  <th className="py-2 px-4" colSpan="2">Letter</th>
+                  <th className="py-2 px-4" colSpan="2">Justification</th>
                   <th className="py-2 px-4">Overall</th>
                 </tr>
               </thead>
@@ -216,7 +216,7 @@ const UserDashboard = () => {
                   ))}
                   <th className="py-2 px-4">Assignments Completed</th>
                   <th className="py-2 px-4" colSpan="2">Attendance</th>
-        <th className="py-2 px-4" colSpan="2">Letter</th>
+        <th className="py-2 px-4" colSpan="2">Justification</th>
         <th className="py-2 px-4">Overall</th>
                 </tr>
               </thead>
