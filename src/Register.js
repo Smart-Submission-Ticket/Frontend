@@ -11,6 +11,7 @@ function Register() {
   const [isOtpSent, setIsOtpSent] = useState(false);
   const [isOtpCorrect, setIsOtpCorrect] = useState(false);
   const [userType, setUserType] = useState('Student');
+  const [loadingtop, setLoadingTop] = useState(false); // Track loading state top one
 
   const [registrationInfo, setRegistrationInfo] = useState({
     email: '',   //
@@ -22,6 +23,7 @@ function Register() {
     year: '',   //
     abcId: '',
     token: '',  //
+    mobile: '' 
   });
 
   const [registrationInfoTeacher, setRegistrationInfoTeacher] = useState({
@@ -94,6 +96,7 @@ function Register() {
   const handleSubmitEmail = async (e) => {
     e.preventDefault();
     console.log(userType);
+    setLoadingTop(true);
     try {
       let url = '';
       if (userType === 'Student') {
@@ -137,12 +140,17 @@ function Register() {
       setError(data.message);
       console.error('Error sending email:', error);
     }
+    setLoadingTop(false);
+
   };
 
 
   const handleOTP = async (e) => {
     e.preventDefault();
+    setLoadingTop(true);
+
     try {
+      setError('');
       let url = '';
       if (userType === 'Student') {
         url = `${baseurl}/api/register/student/verify-otp`;
@@ -176,20 +184,27 @@ function Register() {
       setError('Invalid OTP. Please try again.');
       console.error('Error verifying OTP:', error);
     }
+    setLoadingTop(false);
+
   };
 
 
   const handleCompleteRegistration = async (e) => {
     e.preventDefault();
+    setLoadingTop(true);
     console.log(registrationInfoTeacher);
     try {
       let url = '';
       if (userType === 'Student') {
         url = `${baseurl}/api/register/student`;
+        if (registrationInfo.mobile.length !== 10 || isNaN(registrationInfo.mobile)) {
+          alert('Mobile number must be exactly 10 digits long and contain only numbers.');
+          return; 
+        }
       } else if (userType === 'Teacher') {
         url = `${baseurl}/api/register/teacher`;
       }
-
+      
       const response = await fetch(url, {
         method: 'POST',
         headers: {
@@ -212,9 +227,11 @@ function Register() {
         console.log('Registration successful!');
         console.log(userType);
         if (userType === 'Student') {
+          localStorage.setItem('SSTusertype', 'Student'); 
           navigate('/UserPage');
         }
         else if (userType === 'Teacher') {
+          localStorage.setItem('SSTusertype', 'Teacher'); 
           navigate('/AdminPage');
         }
         else {
@@ -230,6 +247,7 @@ function Register() {
       console.error('Error during registration:', error.message);
     }
     console.log(userType === 'Student' ? registrationInfo : registrationInfoTeacher);
+    setLoadingTop(false);
   };
 
 
@@ -439,6 +457,22 @@ function Register() {
                       readOnly
                     />
                   </div>
+
+                  <div className="mb-4">
+                    <label htmlFor="mobileNo" className="block text-sm font-medium text-gray-700">
+                      Mobile No:
+                    </label>
+                    <input
+                      type="text"
+                      id="mobile"
+                      name="mobile"
+                      className={`mt-1 block w-full rounded-md px-4 py-2 focus:ring focus:ring-indigo-200 focus:ring-opacity-50`}
+                      placeholder="Enter Mobile No"
+                      value={registrationInfo.mobile}
+                      onChange={handleRegistrationChange}
+                      required
+                    />
+                  </div>
                   <div className="mb-4">
                     <label htmlFor="abcId" className="block text-sm font-medium text-gray-700">
                       ABC ID:
@@ -472,7 +506,11 @@ function Register() {
                   </div>
                 </>
               )}
-
+               {loadingtop && (
+                <div className="fixed top-0 left-0 w-full flex justify-center items-center z-50 mt-20">
+                <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-blue-500"></div>
+            </div>
+               )}
               <div className="text-center">
                 <button
                   type="submit"

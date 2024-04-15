@@ -1,5 +1,5 @@
 // AuthService.js
-const TOKEN_KEY = 'jwtToken';
+const TOKEN_KEY = 'SSTToken';
 
 const AuthService = {
   login: () => {

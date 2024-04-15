@@ -1044,7 +1044,7 @@ const AdminDashboard = () => {
                 <div className="fixed top-0 left-0 w-full flex justify-center items-center z-50 mt-20">
                 <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-blue-500"></div>
             </div>
-)}
+            )}
             {/* Modal for editing */}
             {isEditModalOpen && selectedRowData && (
                 <div className="fixed top-0 left-0 w-full h-full flex items-center justify-center bg-black bg-opacity-50 z-50">
@@ -1175,10 +1175,17 @@ const AdminDashboard = () => {
                                             <span>{data.unitTest1Marks}</span>
                                         </td>
                                         <td className="py-2 px-4 text-center" colSpan="12">
-                                            <input
-                                                type="checkbox"
-                                                checked={data.exAssmt1}
-                                            />
+                                        {data.unitTest1Marks >= 12 ? (
+                                        <input
+                                            type="checkbox"
+                                            checked={true}
+                                        />
+                                    ) : (
+                                        <input
+                                            type="checkbox"
+                                            checked={data.exAssmt1}
+                                        />
+                                    )}
                                         </td>
                                     </>
                                 )}
@@ -1188,10 +1195,17 @@ const AdminDashboard = () => {
                                             <span>{data.unitTest2Marks}</span>
                                         </td>
                                         <td className="py-2 px-4 text-center" colSpan="12">
-                                            <input
-                                                type="checkbox"
-                                                checked={data.exAssmt2}
-                                            />
+                                        {data.unitTest2Marks >= 12 ? (
+                                        <input
+                                            type="checkbox"
+                                            checked={true}
+                                        />
+                                    ) : (
+                                        <input
+                                            type="checkbox"
+                                            checked={data.exAssmt2}
+                                        />
+                                    )}
                                         </td>
                                     </>
                                 )}

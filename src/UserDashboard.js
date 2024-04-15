@@ -1,14 +1,13 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
-import AuthService from './AuthService';
+import { useNavigate } from 'react-router-dom';
 
 const UserDashboard = () => {
   const navigate = useNavigate();
-  const location = useLocation();
   const [SSTToken, setSSTToken] = useState('');
   const [tableData, setTableData] = useState([]);
   const [practicalData, setPracticalData] = useState([]);
   const [loading, setLoading] = useState(true); // Track loading state
+  const [userD, setuserD] = useState();
   const baseurl = 'https://smart-submission-ticket.gopalsaraf.com';
 
   // Get SSTToken from local storage and set it in state
@@ -32,6 +31,7 @@ const UserDashboard = () => {
       if (response.ok) {
         const userData = await response.json();
         console.log(userData);
+        setuserD(userData);
         setTableData(generateDummyData(userData));
         setPracticalData(generatePracticalData(userData));
         setLoading(false);
@@ -65,13 +65,13 @@ const UserDashboard = () => {
 
   const generatePracticalData = (userData) => {
     const practicalSubjects = userData.subjects.practical;
-  
+
     // Find the maximum number of assignments for practical subjects
     const maxAssignments = Math.max(...practicalSubjects.map(subject => subject.noOfAssignments), 0);
-  
+
     // Generate assignment labels (A1, A2, ...)
     const assignmentLabels = Array.from({ length: maxAssignments }, (_, i) => `A${i + 1}`);
-  
+
     // Map practical subjects to table rows
     const practicalTableData = practicalSubjects.map((subject) => {
       const assignmentMarks = userData.assignments[subject.title]?.marks ?? [];
@@ -82,9 +82,9 @@ const UserDashboard = () => {
       const assignmentsCompleted = userData.assignments[subject.title]?.allCompleted ?? false;
 
       let overall = false;
-        if (assignmentsCompleted && letter) {
-            overall = true;
-        }
+      if (assignmentsCompleted && letter) {
+        overall = true;
+      }
       return {
         name: subject.title,
         assignments: subject.noOfAssignments,
@@ -96,15 +96,8 @@ const UserDashboard = () => {
         overall: overall // Placeholder for now, replace with actual logic
       };
     });
-  
+
     return practicalTableData;
-  };
-  
-  
-  // Handle user logout
-  const handleLogout = () => {
-    AuthService.logout();
-    navigate('/');
   };
 
 
@@ -116,7 +109,7 @@ const UserDashboard = () => {
 
 
   console.log(practicalData);
-
+  console.log(userD);
   return (
     <div className="admin-dashboard-container mx-5 p-4 bg-blue-100 rounded-md">
       <h1 className="text-3xl font-semibold mb-4 text-center">Submission status table</h1>
@@ -142,9 +135,9 @@ const UserDashboard = () => {
                     </>
                   )}
                   <th className="py-2 px-4" colSpan="12">Unit Test 1</th>
-                  <th className="py-2 px-4" colSpan="12">Ex.As1</th>
+                  <th className="py-2 px-4" colSpan="12">UT1 Alternate</th>
                   <th className="py-2 px-4" colSpan="12">Unit Test 2</th>
-                  <th className="py-2 px-4" colSpan="12">Ex.As2</th>
+                  <th className="py-2 px-4" colSpan="12">UT2 Alternate</th>
                   <th className="py-2 px-4" colSpan="2">Attendance</th>
                   <th className="py-2 px-4" colSpan="2">Justification</th>
                   <th className="py-2 px-4">Overall</th>
@@ -216,8 +209,8 @@ const UserDashboard = () => {
                   ))}
                   <th className="py-2 px-4">Assignments Completed</th>
                   <th className="py-2 px-4" colSpan="2">Attendance</th>
-        <th className="py-2 px-4" colSpan="2">Justification</th>
-        <th className="py-2 px-4">Overall</th>
+                  <th className="py-2 px-4" colSpan="2">Justification</th>
+                  <th className="py-2 px-4">Overall</th>
                 </tr>
               </thead>
               <tbody>
@@ -236,20 +229,20 @@ const UserDashboard = () => {
                       />
                     </td>
                     <td className="py-2 px-4 text-center" colSpan="2">
-            <span>{data.attendance}</span>
-          </td>
-          <td className="py-2 px-4 text-center" colSpan="2">
-            <input
-              type="checkbox"
-              checked={data.letter}
-            />
-          </td>
-          <td className="py-2 px-4 text-center">
-            <input
-              type="checkbox"
-              checked={data.overall}
-            />
-          </td>
+                      <span>{data.attendance}</span>
+                    </td>
+                    <td className="py-2 px-4 text-center" colSpan="2">
+                      <input
+                        type="checkbox"
+                        checked={data.letter}
+                      />
+                    </td>
+                    <td className="py-2 px-4 text-center">
+                      <input
+                        type="checkbox"
+                        checked={data.overall}
+                      />
+                    </td>
                   </tr>
                 ))}
               </tbody>
@@ -259,10 +252,14 @@ const UserDashboard = () => {
         </>
       )}
       <div className="flex justify-end mb-4">
-        <button className="bg-green-500 my-10 mx-10 text-white py-2 px-4 rounded">
+        <button
+          className="bg-green-500 my-10 mx-10 text-white py-2 px-4 rounded"
+          onClick={() => navigate('/SubmissionT', { state: { userD } })}
+          >
           Export as PDF
         </button>
       </div>
+
     </div>
   );
 

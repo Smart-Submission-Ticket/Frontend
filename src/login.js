@@ -7,12 +7,13 @@ function Login() {
   const [password, setPassword] = useState('');
   //const [userType, setUserType] = useState('Student');
   const [error, setError] = useState('');
+  const [loadingtop, setLoadingTop] = useState(false); // Track loading state top one
   const navigate = useNavigate();
   const { login } = useAuth();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-
+    setError('');
     const formData = {
       email,
       password,
@@ -22,6 +23,7 @@ function Login() {
     // Determine the URL based on the user type
     //const url = userType === 'Student' ? `${baseurl}/api/login/student` : `${baseurl}/api/login/teacher`;
     const mixurl = `${baseurl}/api/login`;
+    setLoadingTop(true);
     try {
       const response = await fetch(mixurl, {
         method: 'POST',
@@ -41,10 +43,12 @@ function Login() {
         login();
         console.log('Login successful');
         //console.log('User Type:', userType);
-
+        
         if (userData.role === 'teacher') {
+          localStorage.setItem('SSTusertype', 'Teacher'); 
           navigate('/AdminPage');
         } else if (userData.role === 'student') {
+          localStorage.setItem('SSTusertype', 'Student'); 
           navigate('/UserPage');
         }
       } else {
@@ -55,6 +59,7 @@ function Login() {
       console.error('Login error:', error.message);
       setError('Login failed. Please check your credentials.');
     }
+    setLoadingTop(false);
   };
 
 
@@ -145,6 +150,11 @@ function Login() {
           </form>
         </div>
       </div>
+      {loadingtop && (
+                <div className="fixed top-0 left-0 w-full flex justify-center items-center z-50 mt-20">
+                <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-blue-500"></div>
+            </div>
+            )}
     </div>
   );
 }

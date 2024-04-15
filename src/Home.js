@@ -3,26 +3,23 @@ import { useNavigate } from 'react-router-dom';
 import AuthService from './AuthService';
 
 function Home() {
-  const [isAdmin, setAdmin] = useState(true);
   const navigate = useNavigate();
 
   useEffect(() => {
     const checkAuthentication = () => {
       if (AuthService.isAuthenticated()) {
-        if (isAdmin) {
+        const userType = localStorage.getItem('SSTusertype')
+        if (userType==='Teacher') {
           navigate('/AdminPage');
-        } else {
+        } else if(userType==='Student'){
           navigate('/UserPage');
         }
       }
     };
 
     checkAuthentication();
-  }, [isAdmin, navigate]);
+  }, [navigate]);
 
-  const adminChange = () => {
-    setAdmin(!isAdmin);
-  };
 
   return (
     <div

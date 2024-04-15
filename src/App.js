@@ -7,6 +7,7 @@ import UserPage from './UserDashboard';
 import Navbar from './Navbar';
 import Home from './Home';
 import Register from './Register';
+import SubmisstionT from './SubmissionT';
 import { useAuth } from './AuthContext';
 // authentic one 
 function App() {
@@ -22,6 +23,7 @@ function App() {
             <Route path="/Home" element={<Home />} />
             <Route path="/Register" element={<Register />} />
             <Route path="/Login" element={<Login />} />
+            <Route path="/SubmissionT"  element={<SubmisstionT />} />
             <Route render={() => <Navigate to="/" />} />
           </Routes>
         </BrowserRouter>
