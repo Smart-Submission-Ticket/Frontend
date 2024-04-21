@@ -1,16 +1,21 @@
 import React, { useState, useEffect } from 'react';
 import { DownloadIcon } from "@heroicons/react/outline";
 import { jsPDF } from "jspdf"; // Import jsPDF
+import { useNavigate } from 'react-router-dom';
+
 import Modal from 'react-modal';
 import 'jspdf-autotable';
 
 const AdminDashboard = () => {
+    const navigate = useNavigate();
+
     const [selectedYear, setSelectedYear] = useState('');
     const [selectedDivision, setSelectedDivision] = useState('');
     const [selectedBatch, setSelectedBatch] = useState('');
     const [selectedSubject, setSelectedSubject] = useState('');
     const [tableData, setTableData] = useState([]);
     const [showTable, setShowTable] = useState(false);
+    const [updatedAssignments, setUpdatedAssignments] = useState([]);
     const [classes, setClasses] = useState({});
     const [loading, setLoading] = useState(false); // Track loading state middle one
     const [loadingtop, setLoadingTop] = useState(false); // Track loading state top one
@@ -21,54 +26,73 @@ const AdminDashboard = () => {
     const [editedRowData, setEditedRowData] = useState([]);
 
     const [isModalOpen, setIsModalOpen] = useState(false);
+
+
     const [Subjects, setSubjects] = useState([]);
     const [selectedAssignementUploadSubject, setSelectedAssignementUploadSubject] = useState('');
     const [selectedUnitTestUploadSubject, setSelectedUnitTestUploadSubject] = useState('');
 
+    const [showModal, setShowModal] = useState(false);
+    const [submissionTicketData, setSubmissionTicketData] = useState({
+        academicYear: '',
+        attendanceLabAsst: '',
+        studentAcheivementCommittee: '',
+        attendance: {
+            minAttendanceRequired: 75,
+            updateAllData: false
+        },
+        utmarks: {
+            minUTMarksRequired: 12,
+            updateAllData: false
+        }
+    });
+
     const yearOptions = ['SE', 'TE', 'BE'];
     const divisionOptions = ['09', '10', '11'];
 
-    const baseurl = 'https://smart-submission-ticket.gopalsaraf.com';
+    const baseurl = 'https://smart-submission-ticket.gopalsaraf.com/api/v2';
 
     const isSubmitDisabled = !(selectedYear && selectedDivision && selectedBatch && selectedSubject);
 
+
+
     useEffect(() => {
-            const fetchData = async () => {
-                try {
-                    const response = await fetch(`${baseurl}/api/classes`);
-                    if (response.ok) {
-                        const data = await response.json();
-                        setClasses(data);
-                        console.log('Classes fetched successfully')
-                    } else {
-                        console.error('Failed to fetch classes');
-                    }
-                } catch (error) {
-                    console.error('Error fetching classes:', error);
+        const fetchData = async () => {
+            try {
+                const response = await fetch(`${baseurl}/classes`);
+                if (response.ok) {
+                    const data = await response.json();
+                    setClasses(data);
+                    console.log('Classes fetched successfully')
+                } else {
+                    console.error('Failed to fetch classes');
                 }
-            };
-            fetchData();
-        
+            } catch (error) {
+                console.error('Error fetching classes:', error);
+            }
+        };
+        fetchData();
+
     }, [selectedYear]);
 
     useEffect(() => {
-            const fetchSubjects = async () => {
-                try {
-                    const response = await fetch(`${baseurl}/api/classes/subjects`);
-                    if (response.ok) {
-                        const data = await response.json();
-                        setSubjects(data);
-                        console.log(data);
-                        console.log('Subjects fetched successfully');
-                    } else {
-                        console.error('Failed to fetch subjects');
-                    }
-                } catch (error) {
-                    console.error('Error fetching subjects:', error);
+        const fetchSubjects = async () => {
+            try {
+                const response = await fetch(`${baseurl}/classes/subjects`);
+                if (response.ok) {
+                    const data = await response.json();
+                    setSubjects(data);
+                    console.log(data);
+                    console.log('Subjects fetched successfully');
+                } else {
+                    console.error('Failed to fetch subjects');
                 }
-            };
-            fetchSubjects();
-        
+            } catch (error) {
+                console.error('Error fetching subjects:', error);
+            }
+        };
+        fetchSubjects();
+
     }, [selectedYear]);
 
 
@@ -141,7 +165,7 @@ const AdminDashboard = () => {
                 if (userData.students.hasOwnProperty(key)) {
                     const user = userData.students[key];
                     if (user.unitTests) {
-                        const unitTests = user.unitTests[selectedSubject];
+                        const unitTests = user.unitTests;
                         const exUT1 = unitTests ? unitTests.ut1Alternate : false;
                         const exUT2 = unitTests ? unitTests.ut2Alternate : false;
                         const letter = user.attendanceAlternate || false;
@@ -150,18 +174,18 @@ const AdminDashboard = () => {
                         data.push({
                             name: user.name || 'NA',
                             rollNo: key,
-                            unitTest1Marks: unitTests ? unitTests.ut1 : 'NA',
-                            exAssmt1: exUT1,
-                            unitTest2Marks: unitTests ? unitTests.ut2 : 'NA',
-                            exAssmt2: exUT2,
-                            attendancePercentage: user.attendance || 'NA',
-                            letter: letter,
+                            ut1: unitTests ? unitTests.ut1 : 'NA',
+                            ut1Alternate: exUT1,
+                            ut2: unitTests ? unitTests.ut2 : 'NA',
+                            ut2Alternate: exUT2,
+                            attendance: user.attendance || 'NA',
+                            attendanceAlternate: letter,
                             overall: overall,
                         });
                     }
                     else {
-                        const assignmentsc = user.assignments[selectedSubject] ? user.assignments[selectedSubject].allCompleted : false;
-                        const assignmentnmarks = user.assignments[selectedSubject] ? user.assignments[selectedSubject].marks : [];
+                        const assignmentsc = user.assignments ? user.assignments.allCompleted : false;
+                        const assignmentnmarks = user.assignments ? user.assignments.marks : [];
                         const letter = user.attendanceAlternate || false;
 
                         const overall = assignmentsc && letter;
@@ -170,8 +194,8 @@ const AdminDashboard = () => {
                             rollNo: key,
                             assignmentsc: assignmentsc,
                             assignmentnmarks: assignmentnmarks,
-                            attendancePercentage: user.attendance || 'NA',
-                            letter: letter,
+                            attendance: user.attendance || 'NA',
+                            attendanceAlternate: letter,
                             overall: overall
 
                         });
@@ -207,11 +231,11 @@ const AdminDashboard = () => {
 
         let metric;
         if (selectedDefaulterList === 'Unit Test 1') {
-            metric = 'exAssmt1';
+            metric = 'ut1Alternate';
         } else if (selectedDefaulterList === 'Unit Test 2') {
-            metric = 'exAssmt2';
+            metric = 'ut2Alternate';
         } else if (selectedDefaulterList === 'Attendance') {
-            metric = 'letter';
+            metric = 'attendanceAlternate';
         } else if (selectedDefaulterList === 'Overall') {
             metric = 'overall';
         } else {
@@ -253,10 +277,10 @@ const AdminDashboard = () => {
         const SSTToken = localStorage.getItem('SSTToken');
 
         try {
-            let endpoint = `${baseurl}/api/records/batch/${selectedBatch}/subject/${selectedSubject}`;
+            let endpoint = `${baseurl}/records/batch/${selectedBatch}/subject/${selectedSubject}`;
 
             if (selectedBatch === 'Entire Class') {
-                endpoint = `${baseurl}/api/records/class/${selectedYear}${selectedDivision}/subject/${selectedSubject}`;
+                endpoint = `${baseurl}/records/class/${selectedYear}${selectedDivision}/subject/${selectedSubject}`;
             }
 
             const response = await fetch(endpoint, {
@@ -269,7 +293,7 @@ const AdminDashboard = () => {
 
             if (response.ok) {
                 const userData = await response.json();
-                console.log(userData);
+                console.log("res", userData);
                 setTableData(generateDummyData(userData));
                 setLoading(false);
                 setShowTable(true);
@@ -287,18 +311,24 @@ const AdminDashboard = () => {
         const formData = new FormData();
         formData.append('file', file);
         console.log(file);
+        const SSTToken = localStorage.getItem('SSTToken');
+
         try {
             setLoadingTop(true);
-            const response = await fetch(`${baseurl}/api/submit/classes`, {
+            const response = await fetch(`${baseurl}/submit/classes`, {
                 method: 'POST',
                 body: formData,
+                headers: {
+                    'x-auth-token': SSTToken,
+                },
             });
+            const userData = await response.json();
+
             if (response.ok) {
-                console.log('Classes uploaded successfully');
-                alert('Classes uploaded successfully');
+                alert(userData.message);
             } else {
                 console.error('Failed to upload Classes');
-                alert('Failed to upload Classes');
+                alert(userData.message);
 
             }
         } catch (error) {
@@ -313,17 +343,23 @@ const AdminDashboard = () => {
         formData.append('file', file);
         console.log(file);
         setLoadingTop(true);
+        const SSTToken = localStorage.getItem('SSTToken');
+
         try {
-            const response = await fetch(`${baseurl}/api/submit/students`, {
+            const response = await fetch(`${baseurl}/submit/students`, {
                 method: 'POST',
                 body: formData,
+                headers: {
+                    'x-auth-token': SSTToken,
+                },
             });
+            const userData = await response.json();
+
             if (response.ok) {
-                console.log('Students uploaded successfully');
-                alert('Students uploaded successfully');
+                alert(userData.message);
             } else {
                 console.error('Sailed to upload students');
-                alert('Sailed to upload students');
+                alert(userData.message);
 
             }
         } catch (error) {
@@ -338,19 +374,23 @@ const AdminDashboard = () => {
         console.log(file);
         setLoadingTop(true);
 
+        const SSTToken = localStorage.getItem('SSTToken');
+
         try {
-            
-            const response = await fetch(`${baseurl}/api/submit/attendance`, {
+            const response = await fetch(`${baseurl}/submit/attendance`, {
                 method: 'POST',
                 body: formData,
+                headers: {
+                    'x-auth-token': SSTToken,
+                },
             });
+            const userData = await response.json();
+
             if (response.ok) {
-                console.log('Attendance uploaded successfully');
-                alert('Attendance uploaded successfully');
+                alert(userData.message);
             } else {
                 console.error('Failed to upload attendance');
-                alert('Failed to upload attendance');
-
+                alert(userData.message);
             }
         } catch (error) {
             console.error('Error uploading attendance:', error);
@@ -358,23 +398,29 @@ const AdminDashboard = () => {
         setLoadingTop(false);
     };
 
+
     const uploadCurriculum = async (file) => {
         const formData = new FormData();
         formData.append('file', file);
         console.log(file);
         setLoadingTop(true);
+        const SSTToken = localStorage.getItem('SSTToken');
 
         try {
-            const response = await fetch(`${baseurl}/api/submit/curriculum`, {
+            const response = await fetch(`${baseurl}/submit/curriculum`, {
                 method: 'POST',
                 body: formData,
+                headers: {
+                    'x-auth-token': SSTToken,
+                },
             });
+            const userData = await response.json();
+
             if (response.ok) {
-                console.log('Curriculum uploaded successfully');
-                alert('Curriculum uploaded successfully');
+                alert(userData.message);
             } else {
                 console.error('Failed to upload curriculum');
-                alert('Failed to upload curriculum');
+                alert(userData.message);
             }
         } catch (error) {
             console.error('Error uploading curriculum:', error);
@@ -388,19 +434,23 @@ const AdminDashboard = () => {
         formData.append('subject', subject);
         formData.append('file', file);
         setLoadingTop(true);
+        const SSTToken = localStorage.getItem('SSTToken');
 
         try {
-            const response = await fetch(`${baseurl}/api/submit/assignments`, {
+            const response = await fetch(`${baseurl}/submit/assignments`, {
                 method: 'POST',
                 body: formData,
+                headers: {
+                    'x-auth-token': SSTToken,
+                },
             });
+            const userData = await response.json();
 
             if (response.ok) {
-                console.log('Assignments uploaded successfully');
-                alert('Assignments uploaded successfully');
+                alert(userData.message);
             } else {
                 console.error('Failed to upload assignments');
-                alert('Failed to upload assignments');
+                alert(userData.message);
             }
         } catch (error) {
             console.error('Error uploading assignments:', error);
@@ -414,21 +464,176 @@ const AdminDashboard = () => {
         formData.append('subject', subject);
         formData.append('file', file);
         setLoadingTop(true);
+        const SSTToken = localStorage.getItem('SSTToken');
 
         try {
-            const response = await fetch(`${baseurl}/api/submit/utmarks`, {
+            const response = await fetch(`${baseurl}/submit/utmarks`, {
                 method: 'POST',
                 body: formData,
+                headers: {
+                    'x-auth-token': SSTToken,
+                },
             });
+            const userData = await response.json();
+
             if (response.ok) {
-                console.log('Unit test marks uploaded successfully');
-                alert('Unit test marks uploaded successfully');
+                alert(userData.message);
             } else {
                 console.error('Failed to upload unit test marks');
-                alert('Failed to upload unit test marks');
+                alert(userData.message);
             }
         } catch (error) {
             console.error('Error uploading unit test marks:', error);
+        }
+        setLoadingTop(false);
+
+    };
+
+    const uploadClassCoordinators = async (file) => {
+        const formData = new FormData();
+        formData.append('file', file);
+        console.log(file);
+        setLoadingTop(true);
+        const SSTToken = localStorage.getItem('SSTToken');
+
+        try {
+            const response = await fetch(`${baseurl}/submit/classcoordinators`, {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'x-auth-token': SSTToken,
+                },
+            });
+            const userData = await response.json();
+
+            if (response.ok) {
+                alert(userData.message);
+            } else {
+                console.error('Failed to Class Coordinators');
+                alert(userData.message);
+            }
+        } catch (error) {
+            console.error('Error uploading Class Coordinators:', error);
+        }
+        setLoadingTop(false);
+
+    };
+
+    const uploadMentors = async (file) => {
+        const formData = new FormData();
+        formData.append('file', file);
+        console.log(file);
+        setLoadingTop(true);
+        const SSTToken = localStorage.getItem('SSTToken');
+
+        try {
+            const response = await fetch(`${baseurl}/submit/mentors`, {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'x-auth-token': SSTToken,
+                },
+            });
+            const userData = await response.json();
+
+            if (response.ok) {
+                alert(userData.message);
+            } else {
+                console.error('Failed to upload mentors');
+                alert(userData.message);
+            }
+        } catch (error) {
+            console.error('Error uploading mentors:', error);
+        }
+        setLoadingTop(false);
+
+    };
+
+    const uploadhonors = async (file) => {
+        const formData = new FormData();
+        formData.append('file', file);
+        console.log(file);
+        setLoadingTop(true);
+        const SSTToken = localStorage.getItem('SSTToken');
+
+        try {
+            const response = await fetch(`${baseurl}/submit/honors`, {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'x-auth-token': SSTToken,
+                },
+            });
+            const userData = await response.json();
+
+            if (response.ok) {
+                alert(userData.message);
+            } else {
+                console.error('Failed to upload honors');
+                alert(userData.message);
+            }
+        } catch (error) {
+            console.error('Error uploading honors:', error);
+        }
+        setLoadingTop(false);
+
+    };
+
+    const uploadTEseminars = async (file) => {
+        const formData = new FormData();
+        formData.append('file', file);
+        console.log(file);
+        setLoadingTop(true);
+        const SSTToken = localStorage.getItem('SSTToken');
+
+        try {
+            const response = await fetch(`${baseurl}/submit/seminars`, {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'x-auth-token': SSTToken,
+                },
+            });
+            const userData = await response.json();
+
+            if (response.ok) {
+                alert(userData.message);
+            } else {
+                console.error('Failed to upload TE seminars');
+                alert(userData.message);
+            }
+        } catch (error) {
+            console.error('Error uploading TE seminars:', error);
+        }
+        setLoadingTop(false);
+
+    };
+
+    const uploadBEprojects = async (file) => {
+        const formData = new FormData();
+        formData.append('file', file);
+        console.log(file);
+        setLoadingTop(true);
+        const SSTToken = localStorage.getItem('SSTToken');
+
+        try {
+            const response = await fetch(`${baseurl}/submit/projects`, {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'x-auth-token': SSTToken,
+                },
+            });
+            const userData = await response.json();
+
+            if (response.ok) {
+                alert(userData.message);
+            } else {
+                console.error('Failed to upload BE projects');
+                alert(userData.message);
+            }
+        } catch (error) {
+            console.error('Error uploading BE projects:', error);
         }
         setLoadingTop(false);
 
@@ -448,6 +653,34 @@ const AdminDashboard = () => {
         }));
     };
 
+    const handleCheckboxChange = (e, rollNo) => {
+        const updatedAssignment = {
+            rollNo: rollNo,
+            allCompleted: e.target.checked
+        };
+
+        // Find the index of the assignment in updatedAssignments array
+        const assignmentIndex = updatedAssignments.findIndex(assignment => assignment.rollNo === rollNo);
+
+        if (assignmentIndex !== -1) {
+            // If the assignment is already in updatedAssignments array, update it
+            const updatedAssignmentsCopy = [...updatedAssignments];
+            updatedAssignmentsCopy[assignmentIndex] = updatedAssignment;
+            setUpdatedAssignments(updatedAssignmentsCopy);
+        } else {
+            // If the assignment is not in updatedAssignments array, add it
+            setUpdatedAssignments(prevState => [...prevState, updatedAssignment]);
+        }
+
+        const updatedTableData = tableData.map(item => {
+            if (item.rollNo === rollNo) {
+                return { ...item, assignmentsc: e.target.checked };
+            }
+            return item;
+        });
+        setTableData(updatedTableData);
+
+    };
 
 
     // Function to handle saving the edited data
@@ -458,15 +691,15 @@ const AdminDashboard = () => {
             const promises = [];
 
             // First API call to update attendance
-            if (editedRowData.attendancePercentage || editedRowData.letter) {
+            if (editedRowData.attendance || editedRowData.attendanceAlternate) {
                 const attendanceData = [
                     {
                         rollNo: selectedRowData.rollNo,
-                        ...(editedRowData.attendancePercentage && { attendance: parseInt(editedRowData.attendancePercentage) }),
-                        ...(editedRowData.letter && { attendanceAlternate: editedRowData.letter }),
+                        ...(editedRowData.attendance && { attendance: parseInt(editedRowData.attendance) }),
+                        ...(editedRowData.attendanceAlternate && { attendanceAlternate: editedRowData.attendanceAlternate }),
                     },
                 ];
-                const attendancePromise = fetch(`${baseurl}/api/records/update/attendance`, {
+                const attendancePromise = fetch(`${baseurl}/records/update/attendance`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -477,26 +710,26 @@ const AdminDashboard = () => {
                 promises.push(attendancePromise);
             }
 
-            const hasFieldsToSave = ['exAssmt1', 'exAssmt2', 'unitTest1Marks', 'unitTest2Marks'].some((field) => editedRowData[field]);
+            const hasFieldsToSave = ['ut1Alternate', 'ut2Alternate', 'ut1', 'ut2'].some((field) => editedRowData[field]);
             console.log(hasFieldsToSave, editedRowData);
             // Second API call to update other fields
             if (hasFieldsToSave) {
                 const utmarksData = {};
-                ['exAssmt1', 'exAssmt2', 'unitTest1Marks', 'unitTest2Marks'].forEach((field) => {
+                ['ut1Alternate', 'ut2Alternate', 'ut1', 'ut2'].forEach((field) => {
                     if (editedRowData[field]) {
-                        if (field === 'exAssmt1') {
+                        if (field === 'ut1Alternate') {
                             utmarksData.ut1Alternate = editedRowData[field];
-                        } else if (field === 'exAssmt2') {
+                        } else if (field === 'ut2Alternate') {
                             utmarksData.ut2Alternate = editedRowData[field];
-                        } else if (field === 'unitTest1Marks') {
+                        } else if (field === 'ut1') {
                             utmarksData.ut1 = parseInt(editedRowData[field]);
-                        } else if (field === 'unitTest2Marks') {
+                        } else if (field === 'ut2') {
                             utmarksData.ut2 = parseInt(editedRowData[field]);
                         }
                     }
                 });
 
-                const utmarksPromise = fetch(`${baseurl}/api/records/update/utmarks/${selectedSubject}`, {
+                const utmarksPromise = fetch(`${baseurl}/records/update/utmarks/${selectedSubject}`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -511,15 +744,25 @@ const AdminDashboard = () => {
             const responses = await Promise.all(promises);
             responses.forEach(async (response) => {
                 const userData = await response.json();
+                var newdata = editedRowData;
                 if (response.ok) {
                     alert(userData.message);
+                    console.log(userData);
+                    if (userData.utmarks) {
+                        newdata = userData.utmarks[0];
+                    }
+                    else if (userData.attendance) {
+                        newdata = userData.attendance[0];
+                    }
+                    console.log("editedrowdata", editedRowData);
+                    console.log("newdata", newdata);
                     // Update tableData with editedRowData
                     setTableData((prevData) => {
                         return prevData.map((data) => {
                             if (data.rollNo === selectedRowData.rollNo) {
                                 return {
                                     ...data,
-                                    ...editedRowData,
+                                    ...newdata,
                                 };
                             }
                             return data;
@@ -540,15 +783,56 @@ const AdminDashboard = () => {
         setLoadingTop(false);
     };
 
+    const SubmitUpdatedAssignment = async () => {
+        setLoadingTop(true);
+        const SSTToken = localStorage.getItem('SSTToken');
+        try {
+            const response = await fetch(`${baseurl}/records/update/assignments/${selectedSubject}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'x-auth-token': SSTToken
+                },
+                body: JSON.stringify({ assignments: updatedAssignments })
+            });
+            const userData = await response.json();
+
+            if (response.ok) {
+                alert(userData.message);
+                // Update tableData based on the response
+                userData.assignments.forEach(updatedAssignment => {
+                    const { rollNo, allCompleted } = updatedAssignment;
+                    setTableData(prevTableData => 
+                        prevTableData.map(data => {
+                            if (data.rollNo === rollNo) {
+                                return { ...data, assignmentsc: allCompleted };
+                            }
+                            return data;
+                        })
+                    );
+                });
+                setUpdatedAssignments([]); // Reset the state after saving
+            } else {
+                console.error('Failed to update assignments');
+                alert(userData.message);
+            }
+           
+        } catch (error) {
+            console.error('Error updating assignments:', error);
+        }
+        setLoadingTop(false);
+    };
+    
+
     const fetchData = async () => {
         setLoading(true);
         try {
             const token = localStorage.getItem('SSTToken');
             const urls = [
-                `${baseurl}/api/fetch/classes`,
-                `${baseurl}/api/fetch/students`,
-                `${baseurl}/api/fetch/curriculum`,
-                `${baseurl}/api/fetch/attendance`
+                `${baseurl}/fetch/classes`,
+                `${baseurl}/fetch/students`,
+                `${baseurl}/fetch/curriculum`,
+                `${baseurl}/fetch/attendance`
             ];
 
             const requests = urls.map(url => fetch(url, {
@@ -577,6 +861,91 @@ const AdminDashboard = () => {
         setLoading(false);
     };
 
+    const handleSSTInputChange = (e) => {
+        const { name, value } = e.target;
+        const parts = name.split('.');
+        if (parts.length === 2) {
+            setSubmissionTicketData({
+                ...submissionTicketData,
+                [parts[0]]: {
+                    ...submissionTicketData[parts[0]],
+                    [parts[1]]: value === 'true' ? true : value === 'false' ? false : value
+                }
+            });
+        } else if (parts.length === 3) {
+            setSubmissionTicketData({
+                ...submissionTicketData,
+                [parts[0]]: {
+                    ...submissionTicketData[parts[0]],
+                    [parts[1]]: {
+                        ...submissionTicketData[parts[0]][parts[1]],
+                        [parts[2]]: value === 'true' ? true : value === 'false' ? false : value
+                    }
+                }
+            });
+        } else {
+            setSubmissionTicketData({
+                ...submissionTicketData,
+                [name]: value
+            });
+        }
+    };
+
+
+    const handleSSTCheckboxChange = (e) => {
+        const { name, checked } = e.target;
+        setSubmissionTicketData({
+            ...submissionTicketData,
+            [name]: checked
+        });
+    };
+
+    const handleSSTDataSubmit = async (e) => {
+        e.preventDefault();
+        setLoadingTop(true);
+        
+        submissionTicketData.attendance.minAttendanceRequired = parseInt(submissionTicketData.attendance.minAttendanceRequired);
+        submissionTicketData.utmarks.minUTMarksRequired = parseInt(submissionTicketData.utmarks.minUTMarksRequired);
+
+        console.log(submissionTicketData);
+        const token = localStorage.getItem('SSTToken');
+        const raw = JSON.stringify({
+            academicYear: "2023 - 2024",
+            attendanceLabAsst: "Mrs S. L. Rane",
+            studentAcheivementCommittee: "Sheetal Patil Madam",
+            attendance: {
+              minAttendanceRequired: 90,
+              updateAllData: true,
+            },
+            utmarks: {
+              minUTMarksRequired: 20,
+              updateAllData: true,
+            },
+          });
+        try {
+            const response = await fetch(`${baseurl}/submit/ticket`, {
+                method: 'POST',
+                headers: {
+                    'x-auth-token': token
+                },
+                body: raw
+            });
+            const userData = await response.json();
+
+            if (response.ok) {
+                alert(userData.message);
+                closeSSTModal();
+            } else {
+                console.error('Failed to submit ticket');
+                alert(userData.message);
+            }
+        } catch (error) {
+            console.error('Error submitting ticket:', error);
+        }
+        setLoadingTop(false);
+
+    };
+
 
     const openModal = () => {
         setIsModalOpen(true);
@@ -587,11 +956,23 @@ const AdminDashboard = () => {
         setIsEditModalOpen(false);
     };
 
-    console.log("edited row", editedRowData);
+    const openSSTModal = () => {
+        setShowModal(true);
+    }
+
+    const closeSSTModal = () => {
+        setShowModal(false);
+    };
+
+    //console.log("edited row", editedRowData);
+    //console.log(submissionTicketData);
+    console.log(updatedAssignments);
     return (
         <div className="admin-dashboard-container mx-3 p-4 bg-blue-100 min-h-screen rounded-md">
-            <div className="flex space-x-6 mb-4">
+            <div className="flex flex-wrap sm:space-x-4 sm:space-y-0 space-y-4 mb-4">
                 {/* Form Section */}
+                {/* <div className="flex space-x-6 mb-4"> */}
+
                 <div className={`input-container border border-black rounded-lg p-4 flex-none flex items-center ${!selectedYear && 'border-red-500'}`}>
                     <label className="text-xl font-bold text-gray-800 inline-block mr-4">Year:</label>
                     <select
@@ -668,7 +1049,7 @@ const AdminDashboard = () => {
 
                 </div>
                 <button
-                    className={`bg-blue-500 text-white p-2 rounded-md ${isSubmitDisabled ? 'cursor-not-allowed opacity-50' : 'cursor-pointer'}`}
+                    className={`bg-blue-500 text-white p-2 rounded-md ${isSubmitDisabled ? 'cursor-not-allowed opacity-50' : 'cursor-pointer'} `}
                     disabled={isSubmitDisabled}
                     onClick={handleSubmit}
                 >
@@ -676,11 +1057,12 @@ const AdminDashboard = () => {
                 </button>
                 <div className="relative inline-block">
                     <button
-                        className={`bg-green-500 text-white p-1 rounded-md cursor-pointer ${isSubmitDisabled ? 'cursor-not-allowed opacity-50' : ''}`}
+                        className={`bg-green-500 text-white p-1 rounded-md cursor-pointer ${isSubmitDisabled ? 'cursor-not-allowed opacity-50' : ''} w-full h-full`}
                         disabled={isSubmitDisabled}
                         onClick={() => setShowMenu(!showMenu)}
                     >
-                        Defaulter List
+                        Defaulter <br />
+                        List
                     </button>
                     {showMenu && (
                         <div className="absolute left-1/2 transform -translate-x-1/2 mt-2 py-2 w-32 bg-white border rounded-md shadow-lg">
@@ -705,324 +1087,562 @@ const AdminDashboard = () => {
 
                 </div>
                 <button
-                    className={`bg-green-500 text-white p-1 rounded-md cursor-pointer`}
+                    className={`bg-green-500 text-white p-1 rounded-md cursor-pointer `}
                     onClick={fetchData}
                 >
-                    Fetch Data <DownloadIcon className="ml-3 w-5 h-5" />
+                    Fetch Data <DownloadIcon className="ml-6 w-5 h-5" />
                 </button>
                 <button
                     className={`bg-green-500 text-white p-1 rounded-md cursor-pointer`}
                     onClick={openModal}
                 >
-                    Upload Data
+                    Upload <br />
+                    Data
                 </button>
-                <Modal
-                    isOpen={isModalOpen}
-                    onRequestClose={closeModal}
-                    className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-white rounded-lg p-8 shadow-lg"
-                    overlayClassName="fixed inset-0 backdrop-blur-sm" // Use the backdrop-blur utility
-                >
-                    <div className="flex justify-end">
+
+            </div>
+            <div className="flex justify-center items-center h-full">
+                {updatedAssignments.length > 0 && (
+                    <div className="mr-4">
                         <button
-                            className="text-red-500 hover:text-red-700"
-                            onClick={closeModal}
+                            className="p-2 bg-green-500 text-white rounded-lg"
+                            onClick={() => {
+                                // Add logic here to save the updatedAssignments
+                                SubmitUpdatedAssignment();
+                            }}
                         >
-                            <svg
-                                xmlns="http://www.w3.org/2000/svg"
-                                className="h-6 w-6"
-                                fill="none"
-                                viewBox="0 0 24 24"
-                                stroke="currentColor"
-                            >
-                                <path
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                    strokeWidth={2}
-                                    d="M6 18L18 6M6 6l12 12"
-                                />
-                            </svg>
+                            Save Changes
                         </button>
+                        <button
+                            className="p-2 bg-red-500 text-white rounded-lg ml-2"
+                            onClick={() => {
+                                setUpdatedAssignments([]); // Reset the state
+                                handleSubmit(); // Perform any other necessary actions
+                            }}
+                        >
+                            Cancel
+                        </button>
+
                     </div>
-                    <div className="modal-content max-h-96 overflow-y-auto" style={{ paddingRight: '15px' }}>
-                        <div className="border-b-2 border-black pb-4 mb-4">
-                            <h2 className="text-xl font-bold mb-4">Upload Attendance</h2>
-                            <p className="mb-4">
-                                Demo File:{" "}
-                                <a href="/Attendance.xlsx" download className="text-blue-500">
-                                    Attendance.xlsx
-                                </a>
-                            </p>
-                            <div className="flex justify-between items-center mb-4">
-                                <input id="attendanceFileInput" type="file" accept=".xlsx" className="mr-2" />
-                                <button
-                                    className="bg-green-500 text-white px-4 py-2 rounded-md mr-2"
-                                    onClick={() => {
-                                        const fileInput = document.getElementById('attendanceFileInput');
-                                        if (fileInput) {
-                                            fileInput.value = null;
-                                        }
-                                    }}
-                                >
-                                    Cancel
-                                </button>
-                                <button
-                                    className="bg-blue-500 text-white px-4 py-2 rounded-md"
-                                    onClick={async () => {
-                                        const fileInput = document.getElementById('attendanceFileInput');
-                                        if (fileInput.files.length > 0) {
-                                            const file = fileInput.files[0];
-                                            uploadAttendance(file);
-                                        } else {
-                                            alert('No file selected');
-                                        }
-                                    }}
-                                >
-                                    Upload
-                                </button>
-                            </div>
+                )}
+                <button
+                    className="p-2 bg-white border border-black rounded-lg text-gray-700 hover:bg-gray-100"
+                    onClick={() => navigate('/AdminSearchRollNo')}
+                >
+                    Search Via RollNo
+                </button>
+            </div>
+
+
+
+            <Modal
+                isOpen={isModalOpen}
+                onRequestClose={closeModal}
+                className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-white rounded-lg p-8 shadow-lg"
+                overlayClassName="fixed inset-0 backdrop-blur-sm" // Use the backdrop-blur utility
+            >
+                <div className="flex justify-end">
+                    <button
+                        className="text-red-500 hover:text-red-700"
+                        onClick={closeModal}
+                    >
+                        <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            className="h-6 w-6"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
+                        >
+                            <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M6 18L18 6M6 6l12 12"
+                            />
+                        </svg>
+                    </button>
+                </div>
+                <div className="modal-content max-h-96 overflow-y-auto" style={{ paddingRight: '15px' }}>
+                    <div className="border-b-2 border-black pb-4 mb-4">
+                        <h2 className="text-xl font-bold mb-4">Upload Attendance</h2>
+                        <p className="mb-4">
+                            Demo File:{" "}
+                            <a href="/Attendance.xlsx" download className="text-blue-500">
+                                Attendance.xlsx
+                            </a>
+                        </p>
+                        <div className="flex justify-between items-center mb-4">
+                            <input id="attendanceFileInput" type="file" accept=".xlsx" className="mr-2" />
+                            <button
+                                className="bg-green-500 text-white px-4 py-2 rounded-md mr-2"
+                                onClick={() => {
+                                    const fileInput = document.getElementById('attendanceFileInput');
+                                    if (fileInput) {
+                                        fileInput.value = null;
+                                    }
+                                }}
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                className="bg-blue-500 text-white px-4 py-2 rounded-md"
+                                onClick={async () => {
+                                    const fileInput = document.getElementById('attendanceFileInput');
+                                    if (fileInput.files.length > 0) {
+                                        const file = fileInput.files[0];
+                                        uploadAttendance(file);
+                                    } else {
+                                        alert('No file selected');
+                                    }
+                                }}
+                            >
+                                Upload
+                            </button>
                         </div>
+                    </div>
 
-                        <div className="border-b-2 border-black pb-4 mb-4">
-                            <h2 className="text-xl font-bold mb-4">Upload Assignments</h2>
-                            <p className="mb-4">
-                                Demo File:{" "}
-                                <a href="/Assignments Example - WAD N9.xlsx" download className="text-blue-500">
-                                    Assignments Example WAD.xlsx
-                                </a>
-                            </p>
-                            <div className="flex justify-between items-center mb-4">
-                                <input id="assignmentsFileInput" type="file" accept=".xlsx" className="mr-2" />
+                    <div className="border-b-2 border-black pb-4 mb-4">
+                        <h2 className="text-xl font-bold mb-4">Upload Assignments</h2>
+                        <p className="mb-4">
+                            Demo File:{" "}
+                            <a href="/Assignments Example - WAD N9.xlsx" download className="text-blue-500">
+                                Assignments Example WAD.xlsx
+                            </a>
+                        </p>
+                        <div className="flex justify-between items-center mb-4">
+                            <input id="assignmentsFileInput" type="file" accept=".xlsx" className="mr-2" />
 
-                                <button
-                                    className="bg-green-500 text-white px-4 py-2 rounded-md mr-2"
-                                    onClick={() => {
-                                        const fileInput = document.getElementById('assignmentsFileInput');
-                                        if (fileInput) {
-                                            fileInput.value = null;
-                                        }
-                                    }}
-                                >
-                                    Cancel
-                                </button>
-                                <button
-                                    className="bg-blue-500 text-white px-4 py-2 rounded-md"
-                                    onClick={() => {
-                                        const fileInput = document.getElementById('assignmentsFileInput');
-                                        if (fileInput && fileInput.files && fileInput.files.length > 0) {
-                                            if (!selectedAssignementUploadSubject) {
-                                                alert('Please select a subject');
-                                                return;
-                                            }
-
-                                            uploadAssignments(selectedAssignementUploadSubject, fileInput.files[0]);
-                                        } else {
-                                            alert('No file selected');
-                                        }
-                                    }}
-                                >
-                                    Upload
-                                </button>
-                            </div>
-                            <div className="relative">
-                                <label className="mr-2">Select Subject:</label>
-                                <select
-                                    name="upload-assignement-subject"
-                                    className={`bg-white border rounded-lg hover:border-gray-500 py-2 px-4 text-gray-700 leading-tight ${!selectedAssignementUploadSubject && 'border-red-500'
-                                        }`}
-                                    value={selectedAssignementUploadSubject}
-                                    onChange={(e) => setSelectedAssignementUploadSubject(e.target.value)}
-                                >
-                                    <option value="">Select Subject</option>
-                                    {generateSubjectOptions().flatMap((subject) =>
-                                        subject.options.practical.map((practicalTitle) => (
-                                            <option key={practicalTitle} value={practicalTitle}>
-                                                {practicalTitle}
-                                            </option>
-                                        ))
-                                    )}
-                                </select>
-                            </div>
-                        </div>
-
-                        <div className="border-b-2 border-black pb-4 mb-4">
-                            <h2 className="text-xl font-bold mb-4">Upload Unit Test Marks</h2>
-                            <p className="mb-4">
-                                Demo File:{" "}
-                                <a href="/Unit Test Marks Example - WAD TE09.xlsx" download className="text-blue-500">
-                                    Unit Test Marks Example - WAD TE09.xlsx
-                                </a>
-                            </p>
-                            <div className="flex justify-between items-center mb-4">
-                                <input id="unitTestMarksFileInput" type="file" accept=".xlsx" className="mr-2" />
-                                <button
-                                    className="bg-green-500 text-white px-4 py-2 rounded-md mr-2"
-                                    onClick={() => {
-                                        const fileInput = document.getElementById('unitTestMarksFileInput');
-                                        if (fileInput) {
-                                            fileInput.value = null;
-                                        }
-                                    }}
-                                >
-                                    Cancel
-                                </button>
-                                <button
-                                    className="bg-blue-500 text-white px-4 py-2 rounded-md"
-                                    onClick={() => {
-                                        const fileInput = document.getElementById('unitTestMarksFileInput');
-                                        const selectedFile = fileInput?.files[0];
-                                        if (!selectedFile) {
-                                            alert('Please select a file');
-                                            return;
-                                        }
-
-                                        if (!selectedUnitTestUploadSubject) {
+                            <button
+                                className="bg-green-500 text-white px-4 py-2 rounded-md mr-2"
+                                onClick={() => {
+                                    const fileInput = document.getElementById('assignmentsFileInput');
+                                    if (fileInput) {
+                                        fileInput.value = null;
+                                    }
+                                }}
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                className="bg-blue-500 text-white px-4 py-2 rounded-md"
+                                onClick={() => {
+                                    const fileInput = document.getElementById('assignmentsFileInput');
+                                    if (fileInput && fileInput.files && fileInput.files.length > 0) {
+                                        if (!selectedAssignementUploadSubject) {
                                             alert('Please select a subject');
                                             return;
                                         }
 
-                                        uploadUnitTestMarks(selectedUnitTestUploadSubject, selectedFile);
-                                    }}
-                                >
-                                    Upload
-                                </button>
-                            </div>
-                            <div className="relative">
-                                <label className="mr-2">Select Subject:</label>
-                                <select
-                                    name="upload-utmarks-subject"
-                                    className={`bg-white border rounded-lg hover:border-gray-500 py-2 px-4 text-gray-700 leading-tight ${!selectedUnitTestUploadSubject && 'border-red-500'
-                                        }`}
-                                    value={selectedUnitTestUploadSubject}
-                                    onChange={(e) => setSelectedUnitTestUploadSubject(e.target.value)}
-                                >
-                                    <option value="">Select Subject</option>
-                                    {generateSubjectOptions().flatMap((subject) =>
-                                        subject.options.theory.map((theoryTitles) => (
-                                            <option key={theoryTitles} value={theoryTitles}>
-                                                {theoryTitles}
-                                            </option>
-                                        ))
-                                    )}
-                                </select>
-                            </div>
+                                        uploadAssignments(selectedAssignementUploadSubject, fileInput.files[0]);
+                                    } else {
+                                        alert('No file selected');
+                                    }
+                                }}
+                            >
+                                Upload
+                            </button>
                         </div>
-
-                        <div className="border-b-2 border-black pb-4 mb-4">
-                            <h2 className="text-xl font-bold mb-4">Upload Classes</h2>
-                            <p className="mb-4">
-                                Demo File:{" "}
-                                <a href="/Classes.xlsx" download className="text-blue-500">
-                                    Classes.xlsx
-                                </a>
-                            </p>
-                            <div className="flex justify-between items-center mb-4">
-                                <input id="classesFileInput" type="file" accept=".xlsx" className="mr-2" />
-                                <button
-                                    className="bg-green-500 text-white px-4 py-2 rounded-md mr-2"
-                                    onClick={() => {
-                                        const fileInput = document.getElementById('classesFileInput');
-                                        if (fileInput) {
-                                            fileInput.value = null;
-                                        }
-                                    }}
-                                >
-                                    Cancel
-                                </button>
-                                <button
-                                    className="bg-blue-500 text-white px-4 py-2 rounded-md"
-                                    onClick={async () => {
-                                        const fileInput = document.getElementById('classesFileInput');
-                                        if (fileInput.files.length > 0) {
-                                            const file = fileInput.files[0];
-                                            uploadClasses(file);
-                                        } else {
-                                            alert('No file selected');
-                                        }
-                                    }}
-                                >
-                                    Upload
-                                </button>
-                            </div>
-                        </div>
-
-                        <div className="border-b-2 border-black pb-4 mb-4">
-                            <h2 className="text-xl font-bold mb-4">Upload Students</h2>
-                            <p className="mb-4">
-                                Demo File:{" "}
-                                <a href="/Students.xlsx" download className="text-blue-500">
-                                    Students.xlsx
-                                </a>
-                            </p>
-                            <div className="flex justify-between items-center mb-4">
-                                <input id="studentsFileInput" type="file" accept=".xlsx" className="mr-2" />
-                                <button
-                                    className="bg-green-500 text-white px-4 py-2 rounded-md mr-2"
-                                    onClick={() => {
-                                        const fileInput = document.getElementById('studentsFileInput');
-                                        if (fileInput) {
-                                            fileInput.value = null;
-                                        }
-                                    }}
-                                >
-                                    Cancel
-                                </button>
-                                <button
-                                    className="bg-blue-500 text-white px-4 py-2 rounded-md"
-                                    onClick={async () => {
-                                        const fileInput = document.getElementById('studentsFileInput');
-                                        if (fileInput.files.length > 0) {
-                                            const file = fileInput.files[0];
-                                            uploadStudents(file);
-                                        } else {
-                                            alert('No file selected');
-                                        }
-                                    }}
-                                >
-                                    Upload
-                                </button>
-                            </div>
-                        </div>
-
-                        <div className="border-b-2 border-black pb-4 mb-4">
-                            <h2 className="text-xl font-bold mb-4">Upload Curriculum</h2>
-                            <p className="mb-4">
-                                Demo File:{" "}
-                                <a href="/Curriculum.xlsx" download className="text-blue-500">
-                                    Curriculum.xlsx
-                                </a>
-                            </p>
-                            <div className="flex justify-between items-center mb-4">
-                                <input id="CurriculumFileInput" type="file" accept=".xlsx" className="mr-2" />
-                                <button
-                                    className="bg-green-500 text-white px-4 py-2 rounded-md mr-2"
-                                    onClick={() => {
-                                        const fileInput = document.getElementById('CurriculumFileInput');
-                                        if (fileInput) {
-                                            fileInput.value = null;
-                                        }
-                                    }}
-                                >
-                                    Cancel
-                                </button>
-                                <button
-                                    className="bg-blue-500 text-white px-4 py-2 rounded-md"
-                                    onClick={async () => {
-                                        const fileInput = document.getElementById('CurriculumFileInput');
-                                        if (fileInput.files.length > 0) {
-                                            const file = fileInput.files[0];
-                                            uploadCurriculum(file);
-                                        } else {
-                                            alert('No file selected');
-                                        }
-                                    }}
-                                >
-                                    Upload
-                                </button>
-                            </div>
+                        <div className="relative">
+                            <label className="mr-2">Select Subject:</label>
+                            <select
+                                name="upload-assignement-subject"
+                                className={`bg-white border rounded-lg hover:border-gray-500 py-2 px-4 text-gray-700 leading-tight ${!selectedAssignementUploadSubject && 'border-red-500'
+                                    }`}
+                                value={selectedAssignementUploadSubject}
+                                onChange={(e) => setSelectedAssignementUploadSubject(e.target.value)}
+                            >
+                                <option value="">Select Subject</option>
+                                {generateSubjectOptions().flatMap((subject) =>
+                                    subject.options.practical.map((practicalTitle) => (
+                                        <option key={practicalTitle} value={practicalTitle}>
+                                            {practicalTitle}
+                                        </option>
+                                    ))
+                                )}
+                            </select>
                         </div>
                     </div>
-                </Modal>
-            </div>
+
+                    <div className="border-b-2 border-black pb-4 mb-4">
+                        <h2 className="text-xl font-bold mb-4">Upload Unit Test Marks</h2>
+                        <p className="mb-4">
+                            Demo File:{" "}
+                            <a href="/Unit Test Marks Example - WAD TE09.xlsx" download className="text-blue-500">
+                                Unit Test Marks Example - WAD TE09.xlsx
+                            </a>
+                        </p>
+                        <div className="flex justify-between items-center mb-4">
+                            <input id="unitTestMarksFileInput" type="file" accept=".xlsx" className="mr-2" />
+                            <button
+                                className="bg-green-500 text-white px-4 py-2 rounded-md mr-2"
+                                onClick={() => {
+                                    const fileInput = document.getElementById('unitTestMarksFileInput');
+                                    if (fileInput) {
+                                        fileInput.value = null;
+                                    }
+                                }}
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                className="bg-blue-500 text-white px-4 py-2 rounded-md"
+                                onClick={() => {
+                                    const fileInput = document.getElementById('unitTestMarksFileInput');
+                                    const selectedFile = fileInput?.files[0];
+                                    if (!selectedFile) {
+                                        alert('Please select a file');
+                                        return;
+                                    }
+
+                                    if (!selectedUnitTestUploadSubject) {
+                                        alert('Please select a subject');
+                                        return;
+                                    }
+
+                                    uploadUnitTestMarks(selectedUnitTestUploadSubject, selectedFile);
+                                }}
+                            >
+                                Upload
+                            </button>
+                        </div>
+                        <div className="relative">
+                            <label className="mr-2">Select Subject:</label>
+                            <select
+                                name="upload-utmarks-subject"
+                                className={`bg-white border rounded-lg hover:border-gray-500 py-2 px-4 text-gray-700 leading-tight ${!selectedUnitTestUploadSubject && 'border-red-500'
+                                    }`}
+                                value={selectedUnitTestUploadSubject}
+                                onChange={(e) => setSelectedUnitTestUploadSubject(e.target.value)}
+                            >
+                                <option value="">Select Subject</option>
+                                {generateSubjectOptions().flatMap((subject) =>
+                                    subject.options.theory.map((theoryTitles) => (
+                                        <option key={theoryTitles} value={theoryTitles}>
+                                            {theoryTitles}
+                                        </option>
+                                    ))
+                                )}
+                            </select>
+                        </div>
+                    </div>
+
+                    <div className="border-b-2 border-black pb-4 mb-4">
+                        <h2 className="text-xl font-bold mb-4">Upload Classes</h2>
+                        <p className="mb-4">
+                            Demo File:{" "}
+                            <a href="/Classes.xlsx" download className="text-blue-500">
+                                Classes.xlsx
+                            </a>
+                        </p>
+                        <div className="flex justify-between items-center mb-4">
+                            <input id="classesFileInput" type="file" accept=".xlsx" className="mr-2" />
+                            <button
+                                className="bg-green-500 text-white px-4 py-2 rounded-md mr-2"
+                                onClick={() => {
+                                    const fileInput = document.getElementById('classesFileInput');
+                                    if (fileInput) {
+                                        fileInput.value = null;
+                                    }
+                                }}
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                className="bg-blue-500 text-white px-4 py-2 rounded-md"
+                                onClick={async () => {
+                                    const fileInput = document.getElementById('classesFileInput');
+                                    if (fileInput.files.length > 0) {
+                                        const file = fileInput.files[0];
+                                        uploadClasses(file);
+                                    } else {
+                                        alert('No file selected');
+                                    }
+                                }}
+                            >
+                                Upload
+                            </button>
+                        </div>
+                    </div>
+
+                    <div className="border-b-2 border-black pb-4 mb-4">
+                        <h2 className="text-xl font-bold mb-4">Upload Students</h2>
+                        <p className="mb-4">
+                            Demo File:{" "}
+                            <a href="/Students.xlsx" download className="text-blue-500">
+                                Students.xlsx
+                            </a>
+                        </p>
+                        <div className="flex justify-between items-center mb-4">
+                            <input id="studentsFileInput" type="file" accept=".xlsx" className="mr-2" />
+                            <button
+                                className="bg-green-500 text-white px-4 py-2 rounded-md mr-2"
+                                onClick={() => {
+                                    const fileInput = document.getElementById('studentsFileInput');
+                                    if (fileInput) {
+                                        fileInput.value = null;
+                                    }
+                                }}
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                className="bg-blue-500 text-white px-4 py-2 rounded-md"
+                                onClick={async () => {
+                                    const fileInput = document.getElementById('studentsFileInput');
+                                    if (fileInput.files.length > 0) {
+                                        const file = fileInput.files[0];
+                                        uploadStudents(file);
+                                    } else {
+                                        alert('No file selected');
+                                    }
+                                }}
+                            >
+                                Upload
+                            </button>
+                        </div>
+                    </div>
+
+                    <div className="border-b-2 border-black pb-4 mb-4">
+                        <h2 className="text-xl font-bold mb-4">Upload Curriculum</h2>
+                        <p className="mb-4">
+                            Demo File:{" "}
+                            <a href="/Curriculum.xlsx" download className="text-blue-500">
+                                Curriculum.xlsx
+                            </a>
+                        </p>
+                        <div className="flex justify-between items-center mb-4">
+                            <input id="CurriculumFileInput" type="file" accept=".xlsx" className="mr-2" />
+                            <button
+                                className="bg-green-500 text-white px-4 py-2 rounded-md mr-2"
+                                onClick={() => {
+                                    const fileInput = document.getElementById('CurriculumFileInput');
+                                    if (fileInput) {
+                                        fileInput.value = null;
+                                    }
+                                }}
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                className="bg-blue-500 text-white px-4 py-2 rounded-md"
+                                onClick={async () => {
+                                    const fileInput = document.getElementById('CurriculumFileInput');
+                                    if (fileInput.files.length > 0) {
+                                        const file = fileInput.files[0];
+                                        uploadCurriculum(file);
+                                    } else {
+                                        alert('No file selected');
+                                    }
+                                }}
+                            >
+                                Upload
+                            </button>
+                        </div>
+                    </div>
+                    <div className="border-b-2 border-black pb-4 mb-4">
+                        <h2 className="text-xl font-bold mb-4">Upload Submission Ticket Details</h2>
+
+                        <div className="flex justify-between items-center mb-4">
+                            <div></div>
+                            <button
+                                className="bg-blue-500 text-white px-4 py-2 rounded-md"
+                                onClick={openSSTModal}
+                            >
+                                Select
+                            </button>
+                        </div>
+                    </div>
+                    <div className="border-b-2 border-black pb-4 mb-4">
+                        <h2 className="text-xl font-bold mb-4">Upload Class Coordinators</h2>
+                        <p className="mb-4">
+                            Demo File:{" "}
+                            <a href="/Class Coordinators.xlsx" download className="text-blue-500">
+                                Class Coordinators.xlsx
+                            </a>
+                        </p>
+                        <div className="flex justify-between items-center mb-4">
+                            <input id="ClassCoordinatorsFileInput" type="file" accept=".xlsx" className="mr-2" />
+                            <button
+                                className="bg-green-500 text-white px-4 py-2 rounded-md mr-2"
+                                onClick={() => {
+                                    const fileInput = document.getElementById('ClassCoordinatorsFileInput');
+                                    if (fileInput) {
+                                        fileInput.value = null;
+                                    }
+                                }}
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                className="bg-blue-500 text-white px-4 py-2 rounded-md"
+                                onClick={async () => {
+                                    const fileInput = document.getElementById('ClassCoordinatorsFileInput');
+                                    if (fileInput.files.length > 0) {
+                                        const file = fileInput.files[0];
+                                        uploadClassCoordinators(file);
+                                    } else {
+                                        alert('No file selected');
+                                    }
+                                }}
+                            >
+                                Upload
+                            </button>
+                        </div>
+                    </div>
+
+                    <div className="border-b-2 border-black pb-4 mb-4">
+                        <h2 className="text-xl font-bold mb-4">Upload Mentors</h2>
+                        <p className="mb-4">
+                            Demo File:{" "}
+                            <a href="/Mentors.xlsx" download className="text-blue-500">
+                                Mentors.xlsx
+                            </a>
+                        </p>
+                        <div className="flex justify-between items-center mb-4">
+                            <input id="MentorsFileInput" type="file" accept=".xlsx" className="mr-2" />
+                            <button
+                                className="bg-green-500 text-white px-4 py-2 rounded-md mr-2"
+                                onClick={() => {
+                                    const fileInput = document.getElementById('MentorsFileInput');
+                                    if (fileInput) {
+                                        fileInput.value = null;
+                                    }
+                                }}
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                className="bg-blue-500 text-white px-4 py-2 rounded-md"
+                                onClick={async () => {
+                                    const fileInput = document.getElementById('MentorsFileInput');
+                                    if (fileInput.files.length > 0) {
+                                        const file = fileInput.files[0];
+                                        uploadMentors(file);
+                                    } else {
+                                        alert('No file selected');
+                                    }
+                                }}
+                            >
+                                Upload
+                            </button>
+                        </div>
+                    </div>
+
+                    <div className="border-b-2 border-black pb-4 mb-4">
+                        <h2 className="text-xl font-bold mb-4">Upload Honors</h2>
+                        <p className="mb-4">
+                            Demo File:{" "}
+                            <a href="/Honors.xlsx" download className="text-blue-500">
+                                Honors.xlsx
+                            </a>
+                        </p>
+                        <div className="flex justify-between items-center mb-4">
+                            <input id="HonorsFileInput" type="file" accept=".xlsx" className="mr-2" />
+                            <button
+                                className="bg-green-500 text-white px-4 py-2 rounded-md mr-2"
+                                onClick={() => {
+                                    const fileInput = document.getElementById('HonorsFileInput');
+                                    if (fileInput) {
+                                        fileInput.value = null;
+                                    }
+                                }}
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                className="bg-blue-500 text-white px-4 py-2 rounded-md"
+                                onClick={async () => {
+                                    const fileInput = document.getElementById('HonorsFileInput');
+                                    if (fileInput.files.length > 0) {
+                                        const file = fileInput.files[0];
+                                        uploadhonors(file);
+                                    } else {
+                                        alert('No file selected');
+                                    }
+                                }}
+                            >
+                                Upload
+                            </button>
+                        </div>
+                    </div>
+
+                    <div className="border-b-2 border-black pb-4 mb-4">
+                        <h2 className="text-xl font-bold mb-4">Upload TE seminars</h2>
+                        <p className="mb-4">
+                            Demo File:{" "}
+                            <a href="/TE Seminars.xlsx" download className="text-blue-500">
+                                TE Seminars.xlsx
+                            </a>
+                        </p>
+                        <div className="flex justify-between items-center mb-4">
+                            <input id="TEseminarFileInput" type="file" accept=".xlsx" className="mr-2" />
+                            <button
+                                className="bg-green-500 text-white px-4 py-2 rounded-md mr-2"
+                                onClick={() => {
+                                    const fileInput = document.getElementById('TEseminarFileInput');
+                                    if (fileInput) {
+                                        fileInput.value = null;
+                                    }
+                                }}
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                className="bg-blue-500 text-white px-4 py-2 rounded-md"
+                                onClick={async () => {
+                                    const fileInput = document.getElementById('TEseminarFileInput');
+                                    if (fileInput.files.length > 0) {
+                                        const file = fileInput.files[0];
+                                        uploadTEseminars(file);
+                                    } else {
+                                        alert('No file selected');
+                                    }
+                                }}
+                            >
+                                Upload
+                            </button>
+                        </div>
+                    </div>
+
+                    <div className="border-b-2 border-black pb-4 mb-4">
+                        <h2 className="text-xl font-bold mb-4">Upload BE projects</h2>
+                        <p className="mb-4">
+                            Demo File:{" "}
+                            <a href="/BE Projects.xlsx" download className="text-blue-500">
+                                BE Projects.xlsx
+                            </a>
+                        </p>
+                        <div className="flex justify-between items-center mb-4">
+                            <input id="BEprojectsFileInput" type="file" accept=".xlsx" className="mr-2" />
+                            <button
+                                className="bg-green-500 text-white px-4 py-2 rounded-md mr-2"
+                                onClick={() => {
+                                    const fileInput = document.getElementById('BEprojectsFileInput');
+                                    if (fileInput) {
+                                        fileInput.value = null;
+                                    }
+                                }}
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                className="bg-blue-500 text-white px-4 py-2 rounded-md"
+                                onClick={async () => {
+                                    const fileInput = document.getElementById('BEprojectsFileInput');
+                                    if (fileInput.files.length > 0) {
+                                        const file = fileInput.files[0];
+                                        uploadBEprojects(file);
+                                    } else {
+                                        alert('No file selected');
+                                    }
+                                }}
+                            >
+                                Upload
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </Modal>
 
             {/* Display message when table is not showing */}
             {!showTable && !loading && (
@@ -1039,11 +1659,11 @@ const AdminDashboard = () => {
                 </div>
             )}
 
-            
+
             {loadingtop && (
                 <div className="fixed top-0 left-0 w-full flex justify-center items-center z-50 mt-20">
-                <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-blue-500"></div>
-            </div>
+                    <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-blue-500"></div>
+                </div>
             )}
             {/* Modal for editing */}
             {isEditModalOpen && selectedRowData && (
@@ -1055,16 +1675,16 @@ const AdminDashboard = () => {
                                 <label htmlFor="ut1" className="mr-4">Unit Test 1 :</label>
                                 <input
                                     type="text"
-                                    id="unitTest1Marks"
-                                    value={editedRowData?.unitTest1Marks === '' ? '' : editedRowData?.unitTest1Marks || selectedRowData.unitTest1Marks}
+                                    id="ut1"
+                                    value={editedRowData?.ut1 === '' ? '' : editedRowData?.ut1 || selectedRowData.ut1}
                                     className="border rounded-md p-1"
                                     onChange={handleInputChange}
                                 />
-                                <label htmlFor="exUt1" className="ml-6 mr-2">Ex.UT1 :</label>
+                                <label htmlFor="exUt1" className="ml-6 mr-2">UT1 Alternate :</label>
                                 <input
                                     type="checkbox"
-                                    id="exAssmt1"
-                                    checked={editedRowData ? editedRowData.exAssmt1 : selectedRowData.exAssmt1}
+                                    id="ut1Alternate"
+                                    checked={editedRowData ? editedRowData.ut1Alternate : selectedRowData.ut1Alternate}
                                     onChange={handleInputChange}
                                 />
                             </div>
@@ -1072,16 +1692,16 @@ const AdminDashboard = () => {
                                 <label htmlFor="ut2" className="mr-4">Unit Test 2 :</label>
                                 <input
                                     type="text"
-                                    id="unitTest2Marks"
-                                    value={editedRowData?.unitTest2Marks === '' ? '' : editedRowData?.unitTest2Marks || selectedRowData.unitTest2Marks}
+                                    id="ut2"
+                                    value={editedRowData?.ut2 === '' ? '' : editedRowData?.ut2 || selectedRowData.ut2}
                                     className="border rounded-md p-1"
                                     onChange={handleInputChange}
                                 />
-                                <label htmlFor="exUt2" className="ml-6 mr-2">Ex.UT2 :</label>
+                                <label htmlFor="exUt2" className="ml-6 mr-2">UT2 Alternate :</label>
                                 <input
                                     type="checkbox"
-                                    id="exAssmt2"
-                                    checked={editedRowData ? editedRowData.exAssmt2 : selectedRowData.exAssmt2}
+                                    id="ut2Alternate"
+                                    checked={editedRowData ? editedRowData.ut2Alternate : selectedRowData.ut2Alternate}
                                     onChange={handleInputChange}
                                 />
                             </div>
@@ -1089,16 +1709,16 @@ const AdminDashboard = () => {
                                 <label htmlFor="attendance" className="mr-4">Attendance :</label>
                                 <input
                                     type="text"
-                                    id="attendancePercentage"
-                                    value={editedRowData?.attendancePercentage === '' ? '' : editedRowData?.attendancePercentage || selectedRowData.attendancePercentage}
+                                    id="attendance"
+                                    value={editedRowData?.attendance === '' ? '' : editedRowData?.attendance || selectedRowData.attendance}
                                     className="border rounded-md p-1"
                                     onChange={handleInputChange}
                                 />
-                                <label htmlFor="letter" className="ml-6 mr-2">Letter :</label>
+                                <label htmlFor="attendanceAlternate" className="ml-6 mr-2">Justification :</label>
                                 <input
                                     type="checkbox"
-                                    id="letter"
-                                    checked={editedRowData?.letter || selectedRowData.letter}
+                                    id="attendanceAlternate"
+                                    checked={editedRowData?.attendanceAlternate || selectedRowData.attendanceAlternate}
                                     onChange={handleInputChange}
                                 />
                             </div>
@@ -1110,6 +1730,126 @@ const AdminDashboard = () => {
                             }} className="bg-red-500 hover:bg-red-600 text-white rounded-md px-4 py-2">Cancel</button>
                             <button onClick={handleSave} className="bg-blue-500 hover:bg-blue-600 text-white rounded-md px-4 py-2 ml-2">Save</button>
                         </div>
+                    </div>
+                </div>
+            )}
+            {showModal && (
+                <div className="fixed inset-0 z-10 flex items-center justify-center bg-gray-800 bg-opacity-50">
+                    <div className="bg-white p-4 rounded-md">
+                        <h2 className="text-lg font-bold">Submission Ticket Data</h2>
+                        <form onSubmit={handleSSTDataSubmit}>
+                            <div className="mb-2">
+                                <label htmlFor="academicYear">Academic Year</label>
+                                <input
+                                    type="text"
+                                    id="academicYear"
+                                    name="academicYear"
+                                    value={submissionTicketData.academicYear}
+                                    onChange={handleSSTInputChange}
+                                    className="border border-gray-300 p-2 rounded-md w-full"
+                                    required
+
+                                />
+                            </div>
+                            <div className="mb-2">
+                                <label htmlFor="attendanceLabAsst">Attendance Lab Assistant Name</label>
+                                <input
+                                    type="text"
+                                    id="attendanceLabAsst"
+                                    name="attendanceLabAsst"
+                                    value={submissionTicketData.attendanceLabAsst}
+                                    onChange={handleSSTInputChange}
+                                    className="border border-gray-300 p-2 rounded-md w-full"
+                                    required
+
+                                />
+                            </div>
+                            <div className="mb-2">
+                                <label htmlFor="studentAcheivementCommittee">Student Achievement Committee Madam Name</label>
+                                <input
+                                    type="text"
+                                    id="studentAcheivementCommittee"
+                                    name="studentAcheivementCommittee"
+                                    value={submissionTicketData.studentAcheivementCommittee}
+                                    onChange={handleSSTInputChange}
+                                    className="border border-gray-300 p-2 rounded-md w-full"
+                                    required
+
+                                />
+                            </div>
+                            <div className="mb-2">
+                                <label htmlFor="attendance.minAttendanceRequired">Minimum Attendance Required</label>
+                                <input
+                                    type="number"
+                                    id="minAttendanceRequired"
+                                    name="attendance.minAttendanceRequired"
+                                    value={submissionTicketData.attendance.minAttendanceRequired}
+                                    onChange={handleSSTInputChange}
+                                    className="border border-gray-300 p-2 rounded-md w-full"
+                                    required
+
+                                />
+                            </div>
+                            <div className="mb-2">
+                                <label htmlFor="attendance.updateAllData">Update All Attendance Data</label>
+                                <select
+                                    id="updateAllData"
+                                    name="attendance.updateAllData"
+                                    value={submissionTicketData.attendance.updateAllData}
+                                    onChange={handleSSTInputChange}
+                                    className="border border-gray-300 p-2 rounded-md w-full"
+                                    required
+
+                                >
+                                    <option value={true}>Fully</option>
+                                    <option value={false}>Partially</option>
+                                </select>
+                            </div>
+                            <div className="mb-2">
+                                <label htmlFor="utmarks.minUTMarksRequired">Minimum UT Marks Required</label>
+                                <input
+                                    type="number"
+                                    id="minUTMarksRequired"
+                                    name="utmarks.minUTMarksRequired"
+                                    value={submissionTicketData.utmarks.minUTMarksRequired}
+                                    onChange={handleSSTInputChange}
+                                    className="border border-gray-300 p-2 rounded-md w-full"
+                                    required
+
+                                />
+                            </div>
+                            <div className="mb-2">
+                                <label htmlFor="utmarks.updateAllData">Update All UT Marks Data</label>
+                                <select
+                                    id="updateAllData"
+                                    name="utmarks.updateAllData"
+                                    value={submissionTicketData.utmarks.updateAllData}
+                                    onChange={handleSSTInputChange}
+                                    className="border border-gray-300 p-2 rounded-md w-full"
+                                    required
+
+                                >
+                                    <option value={true}>Fully</option>
+                                    <option value={false}>Partially</option>
+                                </select>
+                            </div>
+                            <div className="mb-2">
+                                <button type="submit" onClick={handleSSTDataSubmit} className="bg-blue-500 text-white px-4 py-2 rounded-md">Save</button>
+                                <button type="button" onClick={closeSSTModal} className="bg-red-500 text-white px-4 py-2 rounded-md ml-2">Cancel</button>
+                            </div>
+                            <div className="text-red-500">
+                                <strong>NOTE:</strong>
+                                <br />
+                                <span>Partially : Changes  will be only applied to the incoming data.</span>
+                                <br />
+                                <span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Existing data will be kept as it is.</span>
+                                <br />
+                                <span>Fully &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;: Changes will be applied to incoming data</span>
+                                <br />
+                                <span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;as well as Existing data will also be re-evaluated</span>
+
+                            </div>
+                        </form>
                     </div>
                 </div>
             )}
@@ -1131,22 +1871,27 @@ const AdminDashboard = () => {
                                 </>
                             )}
 
-                            {tableData[0]?.unitTest1Marks && (
+                            {tableData[0]?.ut1 && (
                                 <>
                                     <th className="py-2 px-4" colSpan="12">Unit Test 1</th>
-                                    <th className="py-2 px-4" colSpan="12">Ex.UT1</th>
+                                    <th className="py-2 px-4" colSpan="12">UT1 Alternate</th>
                                 </>
                             )}
 
-                            {tableData[0]?.unitTest2Marks && (
+                            {tableData[0]?.ut2 && (
                                 <>
                                     <th className="py-2 px-4" colSpan="12">Unit Test 2</th>
-                                    <th className="py-2 px-4" colSpan="12">Ex.UT2</th>
+                                    <th className="py-2 px-4" colSpan="12">UT2 Alternate</th>
                                 </>
                             )}
                             <th className="py-2 px-4" colSpan="2">Attendance</th>
                             <th className="py-2 px-4" colSpan="2">Justification</th>
-                            <th className="py-2 px-4" colSpan="2">Edit</th>
+                            {tableData[0]?.ut1 && (
+                                <>
+                                    <th className="py-2 px-4" colSpan="2">Edit</th>
+                                </>
+                            )}
+
                             <th className="py-2 px-4" colSpan="2">Overall</th>
                         </tr>
                     </thead>
@@ -1162,6 +1907,7 @@ const AdminDashboard = () => {
                                             <input
                                                 type="checkbox"
                                                 checked={data.assignmentsc}
+                                                onChange={(e) => handleCheckboxChange(e, data.rollNo)}
                                             />
                                         </td>
                                         {data.assignmentnmarks.map((mark, i) => (
@@ -1169,65 +1915,54 @@ const AdminDashboard = () => {
                                         ))}
                                     </>
                                 )}
-                                {data.unitTest1Marks !== undefined && (
+                                {data.ut1 !== undefined && (
                                     <>
                                         <td className="py-2 px-4 text-center" colSpan="12">
-                                            <span>{data.unitTest1Marks}</span>
+                                            <span>{data.ut1}</span>
                                         </td>
                                         <td className="py-2 px-4 text-center" colSpan="12">
-                                        {data.unitTest1Marks >= 12 ? (
-                                        <input
-                                            type="checkbox"
-                                            checked={true}
-                                        />
-                                    ) : (
-                                        <input
-                                            type="checkbox"
-                                            checked={data.exAssmt1}
-                                        />
-                                    )}
+
+                                            <input
+                                                type="checkbox"
+                                                checked={data.ut1Alternate}
+                                            />
+
                                         </td>
                                     </>
                                 )}
-                                {data.unitTest2Marks !== undefined && (
+                                {data.ut2 !== undefined && (
                                     <>
                                         <td className="py-2 px-4 text-center" colSpan="12">
-                                            <span>{data.unitTest2Marks}</span>
+                                            <span>{data.ut2}</span>
                                         </td>
                                         <td className="py-2 px-4 text-center" colSpan="12">
-                                        {data.unitTest2Marks >= 12 ? (
-                                        <input
-                                            type="checkbox"
-                                            checked={true}
-                                        />
-                                    ) : (
-                                        <input
-                                            type="checkbox"
-                                            checked={data.exAssmt2}
-                                        />
-                                    )}
+
+                                            <input
+                                                type="checkbox"
+                                                checked={data.ut2Alternate}
+                                            />
+
                                         </td>
                                     </>
                                 )}
                                 <td className="py-2 px-4 text-center" colSpan="2">
-                                    <span>{data.attendancePercentage}</span>
+                                    <span>{data.attendance}</span>
                                 </td>
                                 <td className="py-2 px-4 text-center" colSpan="2">
-                                    {data.attendancePercentage >= 75 ? (
-                                        <input
-                                            type="checkbox"
-                                            checked={true}
-                                        />
-                                    ) : (
-                                        <input
-                                            type="checkbox"
-                                            checked={data.letter}
-                                        />
-                                    )}
+
+                                    <input
+                                        type="checkbox"
+                                        checked={data.attendanceAlternate}
+                                    />
+
                                 </td>
-                                <td className="py-2 px-4 text-center text-indigo-600" colSpan="2">
-                                    <button onClick={() => handleEdit(data)}>Edit</button>
-                                </td>
+                                {data.ut1 && (
+                                    <td className="py-2 px-4 text-center text-indigo-600" colSpan="2">
+                                        <button onClick={() => handleEdit(data)}>Edit</button>
+                                    </td>
+                                )}
+
+
                                 <td className="py-2 px-4 text-center" colSpan="2">
                                     <input
                                         type="checkbox"

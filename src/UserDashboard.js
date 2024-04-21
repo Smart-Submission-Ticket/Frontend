@@ -8,7 +8,7 @@ const UserDashboard = () => {
   const [practicalData, setPracticalData] = useState([]);
   const [loading, setLoading] = useState(true); // Track loading state
   const [userD, setuserD] = useState();
-  const baseurl = 'https://smart-submission-ticket.gopalsaraf.com';
+  const baseurl = 'https://smart-submission-ticket.gopalsaraf.com/api/v2';
 
   // Get SSTToken from local storage and set it in state
   useEffect(() => {
@@ -21,7 +21,7 @@ const UserDashboard = () => {
   // Fetch user data from the backend
   const fetchDataFromBackend = async () => {
     try {
-      const response = await fetch(`${baseurl}/api/records`, {
+      const response = await fetch(`${baseurl}/records`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',

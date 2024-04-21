@@ -33,7 +33,7 @@ function Register() {
     token: '',  //
   });
 
-  const baseurl = 'https://smart-submission-ticket.gopalsaraf.com';
+  const baseurl = 'https://smart-submission-ticket.gopalsaraf.com/api/v2';
 
   const navigate = useNavigate();
   const { login } = useAuth();
@@ -100,9 +100,9 @@ function Register() {
     try {
       let url = '';
       if (userType === 'Student') {
-        url = `${baseurl}/api/register/student/verify-email`;
+        url = `${baseurl}/register/student/verify-email`;
       } else if (userType === 'Teacher') {
-        url = `${baseurl}/api/register/teacher/verify-email`;
+        url = `${baseurl}/register/teacher/verify-email`;
       }
       console.log(url);
       const response = await fetch(url, {
@@ -153,9 +153,9 @@ function Register() {
       setError('');
       let url = '';
       if (userType === 'Student') {
-        url = `${baseurl}/api/register/student/verify-otp`;
+        url = `${baseurl}/register/student/verify-otp`;
       } else if (userType === 'Teacher') {
-        url = `${baseurl}/api/register/teacher/verify-otp`;
+        url = `${baseurl}/register/teacher/verify-otp`;
       }
 
       const response = await fetch(url, {
@@ -196,13 +196,13 @@ function Register() {
     try {
       let url = '';
       if (userType === 'Student') {
-        url = `${baseurl}/api/register/student`;
+        url = `${baseurl}/register/student`;
         if (registrationInfo.mobile.length !== 10 || isNaN(registrationInfo.mobile)) {
           alert('Mobile number must be exactly 10 digits long and contain only numbers.');
           return; 
         }
       } else if (userType === 'Teacher') {
-        url = `${baseurl}/api/register/teacher`;
+        url = `${baseurl}/register/teacher`;
       }
       
       const response = await fetch(url, {

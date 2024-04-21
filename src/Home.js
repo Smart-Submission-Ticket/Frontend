@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import AuthService from './AuthService';
 
@@ -29,13 +29,8 @@ function Home() {
       }}
     >
       {/* Transparent Logo */}
-      <div className="absolute top-0 mt-8">
-        <img
-          src="https://pict.edu/images/pic.jpg"
-          alt="PICT Logo"
-          className="rounded-full"
-        />
-      </div>
+      <div className="absolute top-0 mt-8 w-40 h-40 bg-cover bg-center " style={{backgroundImage: `url(${process.env.PUBLIC_URL}/pictlogo2.png)`}}></div>
+
 
       <div className="bg-white bg-opacity-75 p-8 max-w-md mx-auto rounded-md shadow-md text-center">
         <h1 className="text-2xl font-semibold mb-6">

@@ -19,10 +19,10 @@ function Login() {
       password,
     };
 
-    const baseurl = 'https://smart-submission-ticket.gopalsaraf.com';
+    const baseurl = 'https://smart-submission-ticket.gopalsaraf.com/api/v2';
     // Determine the URL based on the user type
     //const url = userType === 'Student' ? `${baseurl}/api/login/student` : `${baseurl}/api/login/teacher`;
-    const mixurl = `${baseurl}/api/login`;
+    const mixurl = `${baseurl}/login`;
     setLoadingTop(true);
     try {
       const response = await fetch(mixurl, {

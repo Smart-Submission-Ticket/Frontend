@@ -1,6 +1,4 @@
-import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import UserDashboard from './UserDashboard';
 import { useLocation } from 'react-router-dom';
 
 function SubmisstionT() {
@@ -45,17 +43,17 @@ function SubmisstionT() {
     theoryArray.forEach((subject, index) => {
         ut1sign[index] = userD.unitTests[subject]?.ut1Alternate !== undefined ? userD.unitTests[subject].ut1Alternate.toString() : ' ';
     });
-    
+
     const ut2sign = Array.from({ length: 5 }, () => ' ');
     theoryArray.forEach((subject, index) => {
         ut2sign[index] = userD.unitTests[subject]?.ut2Alternate !== undefined ? userD.unitTests[subject].ut2Alternate.toString() : ' ';
     });
-    
+
     const practicalsign = Array.from({ length: 5 }, () => ' ');
     practicalArray.forEach((subject, index) => {
         practicalsign[index] = userD.assignments[subject]?.allCompleted !== undefined ? userD.assignments[subject].allCompleted.toString() : ' ';
     });
-    
+
 
     console.log(ut2marks);
     console.log(theoryArray);
@@ -109,14 +107,7 @@ function SubmisstionT() {
                                         Coordinator/TG</span><span style={{ fontSize: '8.5pt', fontWeight: 'bold' }}> </span></p>
                                 </td>
                             </tr>
-                            <tr style={{ height: '9.95pt', AwHeightRule: 'exactly' }}>
-                                <td colSpan={2} style={{ width: '46pt', borderStyle: 'solid', borderWidth: '0.75pt', verticalAlign: 'middle', AwBorder: '0.5pt single' }}>
-                                    <p style={{ fontSize: '12pt' }}><span style={{ AwImport: 'ignore' }}>&nbsp;</span></p>
-                                </td>
-                                <td colSpan={11} style={{ width: '399.9pt', borderStyle: 'solid', borderWidth: '0.75pt', verticalAlign: 'middle', AwBorder: '0.5pt single' }}>
-                                    <p style={{ fontSize: '12pt' }}><span style={{ AwImport: 'ignore' }}>&nbsp;</span></p>
-                                </td>
-                            </tr>
+
                             <tr style={{ height: '9.9pt', AwHeightRule: 'exactly' }}>
                                 <td colSpan={13} style={{ width: '93.4pt', borderStyle: 'solid', borderWidth: '0.75pt', paddingRight: '348.38pt', paddingLeft: '4.88pt', verticalAlign: 'middle', backgroundColor: '#000000', AwBorder: '0.5pt single' }}>
                                     <p style={{ marginTop: '0.05pt', textAlign: 'justify', lineHeight: '9.4pt' }}><span style={{ fontSize: '8.5pt', fontWeight: 'bold', color: '#ffffff', backgroundColor: '#000000' }}>1.
@@ -192,7 +183,7 @@ function SubmisstionT() {
                                     </span></p>
                                 </td>
                                 <td colSpan={8} style={{ width: '273.75pt', borderStyle: 'solid', borderWidth: '0.75pt', verticalAlign: 'middle', AwBorder: '0.5pt single', textAlign: 'center', }}>
-                                    <p style={{ fontSize: '12pt' }}><span style={{ AwImport: 'ignore' }}>{userD.ABCID}</span></p>
+                                    <p style={{ fontSize: '12pt' }}><span style={{ AwImport: 'ignore' }}>{userD.abcId}</span></p>
                                 </td>
                             </tr>
                             <tr style={{ height: '10.15pt', AwHeightRule: 'exactly' }}>
@@ -290,11 +281,7 @@ function SubmisstionT() {
                                             and Co-Curricular Activities to be submitted) </span></p>
                                 </td>
                             </tr>
-                            <tr style={{ height: '10.45pt', AwHeightRule: 'exactly' }}>
-                                <td colSpan={13} style={{ width: '446.65pt', borderStyle: 'solid', borderWidth: '0.75pt', verticalAlign: 'middle', backgroundColor: '#000000', AwBorder: '0.5pt single' }}>
-                                    <p style={{ fontSize: '12pt' }}><span style={{ color: '#ffffff', AwImport: 'ignore' }}>&nbsp;</span></p>
-                                </td>
-                            </tr>
+
                             <tr style={{ height: '15.95pt', AwHeightRule: 'exactly' }}>
                                 <td colSpan={4} style={{ width: '120.4pt', borderStyle: 'solid', borderWidth: '0.75pt', paddingRight: '2.72pt', paddingLeft: '4.88pt', verticalAlign: 'top', AwBorder: '0.5pt single' }}>
                                     <p style={{ marginTop: '0.25pt', textAlign: 'justify', lineHeight: '9.4pt' }}><span style={{ fontSize: '8.5pt' }}>Student Achievement Committee </span></p>
@@ -337,22 +324,22 @@ function SubmisstionT() {
                                 </td>
                             </tr>
                             <tr style={{ height: '17.9pt', AwHeightRule: 'exactly' }}>
-                                <td style={{ width: '29.8pt', borderStyle: 'solid', borderWidth: '0.75pt', paddingRight: '7.62pt', paddingLeft: '4.88pt', verticalAlign: 'middle', AwBorder: '0.5pt single', textAlign: 'center'}}>
+                                <td style={{ width: '29.8pt', borderStyle: 'solid', borderWidth: '0.75pt', paddingRight: '7.62pt', paddingLeft: '4.88pt', verticalAlign: 'middle', AwBorder: '0.5pt single', textAlign: 'center' }}>
                                     <p style={{ marginTop: '0.05pt', lineHeight: '8.6pt' }}><span style={{ fontSize: '8pt' }}>Course Name</span></p>
                                 </td>
-                                <td colSpan={2} style={{ width: '28.9pt', borderStyle: 'solid', borderWidth: '0.75pt', paddingRight: '8.52pt', paddingLeft: '4.92pt', verticalAlign: 'top', AwBorder: '0.5pt single' , textAlign: 'center'}}>
+                                <td colSpan={2} style={{ width: '28.9pt', borderStyle: 'solid', borderWidth: '0.75pt', paddingRight: '8.52pt', paddingLeft: '4.92pt', verticalAlign: 'top', AwBorder: '0.5pt single', textAlign: 'center' }}>
                                     <p style={{ marginTop: '0.05pt', textAlign: 'justify', lineHeight: '9.4pt' }}><span style={{ fontSize: '8.5pt' }}>Marks </span></p>
                                 </td>
-                                <td style={{ width: '33.78pt', borderStyle: 'solid', borderWidth: '0.75pt', paddingLeft: '8.12pt', verticalAlign: 'top', AwBorder: '0.5pt single' , textAlign: 'center'}}>
+                                <td style={{ width: '33.78pt', borderStyle: 'solid', borderWidth: '0.75pt', paddingLeft: '8.12pt', verticalAlign: 'top', AwBorder: '0.5pt single', textAlign: 'center' }}>
                                     <p style={{ marginTop: '0.5pt', textAlign: 'justify', lineHeight: '8.35pt' }}><span style={{ fontSize: '7.5pt' }}>Staff Sign </span></p>
                                 </td>
-                                <td style={{ width: '29.8pt', borderStyle: 'solid', borderWidth: '0.75pt', paddingRight: '8.48pt', paddingLeft: '5.12pt', verticalAlign: 'middle', AwBorder: '0.5pt single' , textAlign: 'center'}}>
+                                <td style={{ width: '29.8pt', borderStyle: 'solid', borderWidth: '0.75pt', paddingRight: '8.48pt', paddingLeft: '5.12pt', verticalAlign: 'middle', AwBorder: '0.5pt single', textAlign: 'center' }}>
                                     <p style={{ lineHeight: '8.6pt' }}><span style={{ fontSize: '8pt' }}>Course Name</span></p>
                                 </td>
                                 <td style={{ width: '28.9pt', borderStyle: 'solid', borderWidth: '0.75pt', paddingRight: '15.73pt', paddingLeft: '5.03pt', verticalAlign: 'top', AwBorder: '0.5pt single', textAlign: 'center' }}>
                                     <p style={{ marginTop: '0.05pt', textAlign: 'justify', lineHeight: '9.4pt' }}><span style={{ fontSize: '8.5pt' }}>Marks </span></p>
                                 </td>
-                                <td colSpan={2} style={{ width: '37.15pt', borderStyle: 'solid', borderWidth: '0.75pt', paddingRight: '7.82pt', paddingLeft: '4.92pt', verticalAlign: 'top', AwBorder: '0.5pt single' , textAlign: 'center'}}>
+                                <td colSpan={2} style={{ width: '37.15pt', borderStyle: 'solid', borderWidth: '0.75pt', paddingRight: '7.82pt', paddingLeft: '4.92pt', verticalAlign: 'top', AwBorder: '0.5pt single', textAlign: 'center' }}>
                                     <p style={{ marginTop: '0.5pt', textAlign: 'justify', lineHeight: '8.35pt' }}><span style={{ fontSize: '7.5pt' }}>Staff Sign </span></p>
                                 </td>
                                 <td colSpan={2} style={{ width: '48.65pt', borderStyle: 'solid', borderWidth: '0.75pt', paddingRight: '1.23pt', paddingLeft: '4.92pt', verticalAlign: 'top', AwBorder: '0.5pt single', textAlign: 'center' }}>
@@ -523,16 +510,16 @@ function SubmisstionT() {
                                 <td style={{ width: '42.3pt', borderStyle: 'solid', borderWidth: '0.75pt', verticalAlign: 'middle', AwBorder: '0.5pt single', textAlign: 'center' }}>
                                     <p style={{ fontSize: '12pt' }}><span style={{ AwImport: 'ignore' }}>&nbsp;</span></p>
                                 </td>
-                                <td colSpan={3} style={{ width: '56.45pt', borderStyle: 'solid', borderWidth: '0.75pt', paddingRight: '23.58pt', paddingLeft: '4.92pt', verticalAlign: 'top', AwBorder: '0.5pt single' , textAlign: 'center'}}>
+                                <td colSpan={3} style={{ width: '56.45pt', borderStyle: 'solid', borderWidth: '0.75pt', paddingRight: '23.58pt', paddingLeft: '4.92pt', verticalAlign: 'top', AwBorder: '0.5pt single', textAlign: 'center' }}>
                                     <p style={{ marginTop: '0.05pt', textAlign: 'justify', lineHeight: '9.4pt' }}><span style={{ fontSize: '8.5pt', fontWeight: 'bold' }}>Course Name </span></p>
                                 </td>
-                                <td style={{ width: '43.4pt', borderStyle: 'solid', borderWidth: '0.75pt', verticalAlign: 'middle', AwBorder: '0.5pt single' , textAlign: 'center'}}>
+                                <td style={{ width: '43.4pt', borderStyle: 'solid', borderWidth: '0.75pt', verticalAlign: 'middle', AwBorder: '0.5pt single', textAlign: 'center' }}>
                                     <p style={{ fontSize: '12pt' }}><span style={{ AwImport: 'ignore' }}>&nbsp;</span></p>
                                 </td>
-                                <td colSpan={2} style={{ width: '62.78pt', borderStyle: 'solid', borderWidth: '0.75pt', paddingLeft: '5.03pt', verticalAlign: 'middle', AwBorder: '0.5pt single' , textAlign: 'center'}}>
+                                <td colSpan={2} style={{ width: '62.78pt', borderStyle: 'solid', borderWidth: '0.75pt', paddingLeft: '5.03pt', verticalAlign: 'middle', AwBorder: '0.5pt single', textAlign: 'center' }}>
                                     <p style={{ marginTop: '0.05pt', textAlign: 'justify', lineHeight: '9.4pt' }}><span style={{ fontSize: '8.5pt', color: '#a5a5a5' }}>Lab Teacher Sign </span></p>
                                 </td>
-                                <td colSpan={2} style={{ width: '67.75pt', borderStyle: 'solid', borderWidth: '0.75pt', verticalAlign: 'middle', AwBorder: '0.5pt single' , textAlign: 'center'}}>
+                                <td colSpan={2} style={{ width: '67.75pt', borderStyle: 'solid', borderWidth: '0.75pt', verticalAlign: 'middle', AwBorder: '0.5pt single', textAlign: 'center' }}>
                                     <p style={{ fontSize: '12pt' }}><span style={{ AwImport: 'ignore' }}>&nbsp;</span></p>
                                 </td>
                                 <td colSpan={2} style={{ width: '56.4pt', borderStyle: 'solid', borderWidth: '0.75pt', paddingRight: '6.38pt', paddingLeft: '5.03pt', verticalAlign: 'middle', AwBorder: '0.5pt single', textAlign: 'center' }}>
@@ -550,12 +537,12 @@ function SubmisstionT() {
                                 <td colSpan={3} style={{ width: '84.95pt', borderStyle: 'solid', borderWidth: '0.75pt', verticalAlign: 'middle', AwBorder: '0.5pt single' }}>
                                     <p style={{ fontSize: '12pt' }}><span style={{ AwImport: 'ignore' }}>&nbsp;</span></p>
                                 </td>
-                                <td style={{ width: '12.4pt', borderStyle: 'solid', borderWidth: '0.75pt', paddingRight: '10.88pt', paddingLeft: '20.12pt', verticalAlign: 'top', AwBorder: '0.5pt single' , textAlign: 'center'}}>
+                                <td style={{ width: '12.4pt', borderStyle: 'solid', borderWidth: '0.75pt', paddingRight: '10.88pt', paddingLeft: '20.12pt', verticalAlign: 'top', AwBorder: '0.5pt single', textAlign: 'center' }}>
                                     <p style={{ marginTop: '0.5pt', textAlign: 'justify', lineHeight: '9.4pt' }}><span style={{ fontSize: '8.5pt' }}>:-
                                     </span></p>
                                 </td>
-                                <td colSpan={2} style={{ width: '67.8pt', borderStyle: 'solid', borderWidth: '0.75pt', verticalAlign: 'middle', AwBorder: '0.5pt single' , textAlign: 'center'}}>
-                                    <p style={{ fontSize: '12pt' }}><span style={{ AwImport: 'ignore' }}>{practicalsign[0] }</span></p>
+                                <td colSpan={2} style={{ width: '67.8pt', borderStyle: 'solid', borderWidth: '0.75pt', verticalAlign: 'middle', AwBorder: '0.5pt single', textAlign: 'center' }}>
+                                    <p style={{ fontSize: '12pt' }}><span style={{ AwImport: 'ignore' }}>{practicalsign[0]}</span></p>
                                 </td>
                                 <td colSpan={2} style={{ width: '26.7pt', borderStyle: 'solid', borderWidth: '0.75pt', paddingRight: '16.92pt', paddingLeft: '24.12pt', verticalAlign: 'top', AwBorder: '0.5pt single', textAlign: 'center' }}>
                                     <p style={{ marginTop: '0.5pt', textAlign: 'justify', lineHeight: '9.4pt' }}><span style={{ fontSize: '8.5pt' }}>{practicalArray[4]} </span></p>
@@ -563,31 +550,31 @@ function SubmisstionT() {
                                 <td colSpan={2} style={{ width: '67.8pt', borderStyle: 'solid', borderWidth: '0.75pt', verticalAlign: 'middle', AwBorder: '0.5pt single', textAlign: 'center' }}>
                                     <p style={{ fontSize: '12pt' }}><span style={{ AwImport: 'ignore' }}>&nbsp;</span></p>
                                 </td>
-                                <td colSpan={2} style={{ width: '68.1pt', borderStyle: 'solid', borderWidth: '0.75pt', verticalAlign: 'middle', AwBorder: '0.5pt single' , textAlign: 'center'}}>
+                                <td colSpan={2} style={{ width: '68.1pt', borderStyle: 'solid', borderWidth: '0.75pt', verticalAlign: 'middle', AwBorder: '0.5pt single', textAlign: 'center' }}>
                                     <p style={{ fontSize: '12pt' }}><span style={{ AwImport: 'ignore' }}>{practicalsign[4]}</span></p>
                                 </td>
                             </tr>
                             <tr style={{ height: '16.3pt', AwHeightRule: 'exactly' }}>
-                                <td style={{ width: '26.7pt', borderStyle: 'solid', borderWidth: '0.75pt', paddingRight: '10.58pt', paddingLeft: '5.03pt', verticalAlign: 'top', AwBorder: '0.5pt single' , textAlign: 'center'}}>
+                                <td style={{ width: '26.7pt', borderStyle: 'solid', borderWidth: '0.75pt', paddingRight: '10.58pt', paddingLeft: '5.03pt', verticalAlign: 'top', AwBorder: '0.5pt single', textAlign: 'center' }}>
                                     <p style={{ marginTop: '0.5pt', textAlign: 'justify', lineHeight: '9.4pt' }}><span style={{ fontSize: '8.5pt' }}>{practicalArray[1]}</span></p>
                                 </td>
                                 <td colSpan={3} style={{ width: '84.95pt', borderStyle: 'solid', borderWidth: '0.75pt', verticalAlign: 'middle', AwBorder: '0.5pt single' }}>
                                     <p style={{ fontSize: '12pt' }}><span style={{ AwImport: 'ignore' }}>&nbsp;</span></p>
                                 </td>
-                                <td style={{ width: '12.4pt', borderStyle: 'solid', borderWidth: '0.75pt', paddingRight: '10.88pt', paddingLeft: '20.12pt', verticalAlign: 'top', AwBorder: '0.5pt single' , textAlign: 'center'}}>
+                                <td style={{ width: '12.4pt', borderStyle: 'solid', borderWidth: '0.75pt', paddingRight: '10.88pt', paddingLeft: '20.12pt', verticalAlign: 'top', AwBorder: '0.5pt single', textAlign: 'center' }}>
                                     <p style={{ marginTop: '0.5pt', textAlign: 'justify', lineHeight: '9.4pt' }}><span style={{ fontSize: '8.5pt' }}>:-
                                     </span></p>
                                 </td>
-                                <td colSpan={2} style={{ width: '67.8pt', borderStyle: 'solid', borderWidth: '0.75pt', verticalAlign: 'middle', AwBorder: '0.5pt single' , textAlign: 'center'}}>
+                                <td colSpan={2} style={{ width: '67.8pt', borderStyle: 'solid', borderWidth: '0.75pt', verticalAlign: 'middle', AwBorder: '0.5pt single', textAlign: 'center' }}>
                                     <p style={{ fontSize: '12pt' }}><span style={{ AwImport: 'ignore' }}>{practicalsign[1]}</span></p>
                                 </td>
                                 <td colSpan={2} style={{ width: '67.42pt', borderStyle: 'solid', borderWidth: '0.75pt', paddingLeft: '0.32pt', verticalAlign: 'top', AwBorder: '0.5pt single', textAlign: 'center' }}>
                                     <p style={{ marginTop: '0.6pt', textAlign: 'justify', lineHeight: '9.4pt' }}><span style={{ fontSize: '8.5pt', color: '#a5a5a5' }}>Stationary item box</span></p>
                                 </td>
-                                <td colSpan={2} style={{ width: '67.8pt', borderStyle: 'solid', borderWidth: '0.75pt', verticalAlign: 'middle', AwBorder: '0.5pt single' , textAlign: 'center'}}>
+                                <td colSpan={2} style={{ width: '67.8pt', borderStyle: 'solid', borderWidth: '0.75pt', verticalAlign: 'middle', AwBorder: '0.5pt single', textAlign: 'center' }}>
                                     <p style={{ fontSize: '12pt' }}><span style={{ AwImport: 'ignore' }}>&nbsp;</span></p>
                                 </td>
-                                <td colSpan={2} style={{ width: '68.1pt', borderStyle: 'solid', borderWidth: '0.75pt', verticalAlign: 'middle', AwBorder: '0.5pt single' , textAlign: 'center'}}>
+                                <td colSpan={2} style={{ width: '68.1pt', borderStyle: 'solid', borderWidth: '0.75pt', verticalAlign: 'middle', AwBorder: '0.5pt single', textAlign: 'center' }}>
                                     <p style={{ fontSize: '12pt' }}><span style={{ AwImport: 'ignore' }}>&nbsp;</span></p>
                                 </td>
                             </tr>
@@ -605,13 +592,13 @@ function SubmisstionT() {
                                 <td colSpan={2} style={{ width: '67.8pt', borderStyle: 'solid', borderWidth: '0.75pt', verticalAlign: 'middle', AwBorder: '0.5pt single', textAlign: 'center' }}>
                                     <p style={{ fontSize: '12pt' }}><span style={{ AwImport: 'ignore' }}>{practicalsign[2]}</span></p>
                                 </td>
-                                <td colSpan={2} style={{ width: '48.9pt', borderStyle: 'solid', borderWidth: '0.75pt', paddingRight: '6.98pt', paddingLeft: '11.88pt', verticalAlign: 'top', AwBorder: '0.5pt single' , textAlign: 'center'}}>
+                                <td colSpan={2} style={{ width: '48.9pt', borderStyle: 'solid', borderWidth: '0.75pt', paddingRight: '6.98pt', paddingLeft: '11.88pt', verticalAlign: 'top', AwBorder: '0.5pt single', textAlign: 'center' }}>
                                     <p style={{ marginTop: '0.6pt', textAlign: 'justify', lineHeight: '9.4pt' }}><span style={{ fontSize: '8.5pt', color: '#a5a5a5' }}>Wallet/Purse</span></p>
                                 </td>
-                                <td colSpan={2} style={{ width: '67.8pt', borderStyle: 'solid', borderWidth: '0.75pt', verticalAlign: 'middle', AwBorder: '0.5pt single' , textAlign: 'center'}}>
+                                <td colSpan={2} style={{ width: '67.8pt', borderStyle: 'solid', borderWidth: '0.75pt', verticalAlign: 'middle', AwBorder: '0.5pt single', textAlign: 'center' }}>
                                     <p style={{ fontSize: '12pt' }}><span style={{ AwImport: 'ignore' }}>&nbsp;</span></p>
                                 </td>
-                                <td colSpan={2} style={{ width: '68.1pt', borderStyle: 'solid', borderWidth: '0.75pt', verticalAlign: 'middle', AwBorder: '0.5pt single' , textAlign: 'center'}}>
+                                <td colSpan={2} style={{ width: '68.1pt', borderStyle: 'solid', borderWidth: '0.75pt', verticalAlign: 'middle', AwBorder: '0.5pt single', textAlign: 'center' }}>
                                     <p style={{ fontSize: '12pt' }}><span style={{ AwImport: 'ignore' }}>&nbsp;</span></p>
                                 </td>
                             </tr>
@@ -626,16 +613,16 @@ function SubmisstionT() {
                                     <p style={{ marginTop: '0.5pt', textAlign: 'justify', lineHeight: '9.4pt' }}><span style={{ fontSize: '8.5pt' }}>:-
                                     </span></p>
                                 </td>
-                                <td colSpan={2} style={{ width: '67.8pt', borderStyle: 'solid', borderWidth: '0.75pt', verticalAlign: 'middle', AwBorder: '0.5pt single' , textAlign: 'center'}}>
+                                <td colSpan={2} style={{ width: '67.8pt', borderStyle: 'solid', borderWidth: '0.75pt', verticalAlign: 'middle', AwBorder: '0.5pt single', textAlign: 'center' }}>
                                     <p style={{ fontSize: '12pt' }}><span style={{ AwImport: 'ignore' }}>{practicalsign[3]}</span></p>
                                 </td>
-                                <td colSpan={2} style={{ width: '50.1pt', borderStyle: 'solid', borderWidth: '0.75pt', paddingRight: '6.38pt', paddingLeft: '11.28pt', verticalAlign: 'top', AwBorder: '0.5pt single', textAlign: 'center'}}>
+                                <td colSpan={2} style={{ width: '50.1pt', borderStyle: 'solid', borderWidth: '0.75pt', paddingRight: '6.38pt', paddingLeft: '11.28pt', verticalAlign: 'top', AwBorder: '0.5pt single', textAlign: 'center' }}>
                                     <p style={{ marginTop: '0.6pt', textAlign: 'justify', lineHeight: '9.4pt' }}><span style={{ fontSize: '8.5pt', color: '#a5a5a5' }}>Paper cutting</span></p>
                                 </td>
-                                <td colSpan={2} style={{ width: '67.8pt', borderStyle: 'solid', borderWidth: '0.75pt', verticalAlign: 'middle', AwBorder: '0.5pt single' , textAlign: 'center'}}>
+                                <td colSpan={2} style={{ width: '67.8pt', borderStyle: 'solid', borderWidth: '0.75pt', verticalAlign: 'middle', AwBorder: '0.5pt single', textAlign: 'center' }}>
                                     <p style={{ fontSize: '12pt' }}><span style={{ AwImport: 'ignore' }}>&nbsp;</span></p>
                                 </td>
-                                <td colSpan={2} style={{ width: '68.1pt', borderStyle: 'solid', borderWidth: '0.75pt', verticalAlign: 'middle', AwBorder: '0.5pt single' , textAlign: 'center'}}>
+                                <td colSpan={2} style={{ width: '68.1pt', borderStyle: 'solid', borderWidth: '0.75pt', verticalAlign: 'middle', AwBorder: '0.5pt single', textAlign: 'center' }}>
                                     <p style={{ fontSize: '12pt' }}><span style={{ AwImport: 'ignore' }}>&nbsp;</span></p>
                                 </td>
                             </tr>
@@ -769,21 +756,19 @@ function SubmisstionT() {
             </div>
 
             <div className="flex justify-center mt-8 mb-8 print:hidden">
-    <button
-        className="bg-red-500 text-white px-4 py-2 rounded-md mr-2 print:hidden"
-        onClick={() => navigate('/UserPage')}
-    >
-        Go back
-    </button>
-    <button
-        className="py-2 px-4 bg-indigo-600 hover:bg-indigo-700 focus:ring focus:ring-indigo-200 text-white rounded-md print:hidden"
-        onClick={() => printpage()}
-    >
-        Click to Print
-    </button>
-</div>
-
-
+                <button
+                    className="bg-red-500 text-white px-4 py-2 rounded-md mr-2 print:hidden"
+                    onClick={() => navigate('/UserPage')}
+                >
+                    Go back
+                </button>
+                <button
+                    className="py-2 px-4 bg-indigo-600 hover:bg-indigo-700 focus:ring focus:ring-indigo-200 text-white rounded-md print:hidden"
+                    onClick={() => printpage()}
+                >
+                    Click to Print
+                </button>
+            </div>
 
         </div>
     );
