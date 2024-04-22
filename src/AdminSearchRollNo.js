@@ -107,22 +107,22 @@ const AdminSearchRollNo = () => {
         <div className="admin-dashboard-container mx-5 p-4 bg-blue-100 rounded-md">
             <h1 className="text-3xl font-semibold mb-4 text-center">Submission Verification</h1>
             <div className="flex justify-center items-center mb-4 mt-4">
-    <form onSubmit={(e) => {
-        e.preventDefault();
-        fetchDataFromBackend(rollNo);
-    }}>
-        <input
-            type="text"
-            placeholder="Enter Roll Number"
-            value={rollNo}
-            onChange={(e) => setRollNo(e.target.value)}
-            className="border border-gray-400 rounded px-2 py-1 mr-2"
-        />
-        <button type="submit" className="bg-blue-500 text-white px-3 py-1 rounded">
-            Search
-        </button>        
-    </form>
-</div>
+                <form onSubmit={(e) => {
+                    e.preventDefault();
+                    fetchDataFromBackend(rollNo);
+                }}>
+                    <input
+                        type="text"
+                        placeholder="Enter Roll Number"
+                        value={rollNo}
+                        onChange={(e) => setRollNo(e.target.value)}
+                        className="border border-gray-400 rounded px-2 py-1 mr-2"
+                    />
+                    <button type="submit" className="bg-blue-500 text-white px-3 py-1 rounded">
+                        Search
+                    </button>
+                </form>
+            </div>
 
             {/* Display message when table is not showing */}
 

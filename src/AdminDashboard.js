@@ -892,6 +892,21 @@ const AdminDashboard = () => {
     setLoadingTop(false);
   };
 
+  const selectAllAssignments = () => {
+      const updatedData = tableData.map(data => ({
+        ...data,
+        assignmentsc: true
+    }));
+    setTableData(updatedData);
+    const updatedAssignmentsData = updatedData.map(data => ({
+        rollNo: data.rollNo,
+        allCompleted: data.assignmentsc
+    }));
+
+    setUpdatedAssignments(updatedAssignmentsData);
+    //SubmitUpdatedAssignment();
+  };
+
   const fetchData = async () => {
     setLoading(true);
     try {
@@ -1194,6 +1209,12 @@ const AdminDashboard = () => {
       <div className="flex justify-center items-center h-full">
         {updatedAssignments.length > 0 && (
           <div className="mr-4">
+            <button
+              className="p-2 mr-4 bg-white border border-black rounded-lg text-gray-700 hover:bg-gray-100"
+              onClick={selectAllAssignments}
+            >
+              Select All Assignements
+            </button>
             <button
               className="p-2 bg-green-500 text-white rounded-lg"
               onClick={() => {
@@ -2248,7 +2269,7 @@ const AdminDashboard = () => {
                 <td className="py-2 px-4 text-center" colSpan="2">
                   <input type="checkbox" checked={data.attendanceAlternate} />
                 </td>
-                {data.ut1 && (
+                {(data.ut1 || data.ut2) && (
                   <td
                     className="py-2 px-4 text-center text-indigo-600"
                     colSpan="2"
