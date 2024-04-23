@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState,useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import AuthService from './AuthService';
 import { useAuth } from './AuthContext';
@@ -37,6 +37,21 @@ function Register() {
 
   const navigate = useNavigate();
   const { login } = useAuth();
+
+  useEffect(() => {
+    const checkAuthentication = () => {
+      if (AuthService.isAuthenticated()) {
+        const userType = localStorage.getItem('SSTusertype')
+        if (userType==='Teacher') {
+          navigate('/AdminPage');
+        } else if(userType==='Student'){
+          navigate('/UserPage');
+        }
+      }
+    };
+
+    checkAuthentication();
+  }, [navigate]);
 
   const setRegistrationData = (data) => {
     if (userType === 'Student') {

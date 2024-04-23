@@ -5,6 +5,7 @@ import { useNavigate } from "react-router-dom";
 
 import Modal from "react-modal";
 import "jspdf-autotable";
+import { tab } from "@testing-library/user-event/dist/tab";
 
 const AdminDashboard = () => {
   const navigate = useNavigate();
@@ -19,22 +20,19 @@ const AdminDashboard = () => {
   const [classes, setClasses] = useState({});
   const [loading, setLoading] = useState(false); // Track loading state middle one
   const [loadingtop, setLoadingTop] = useState(false); // Track loading state top one
-
+  
   const [showMenu, setShowMenu] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [selectedRowData, setSelectedRowData] = useState(null);
   const [editedRowData, setEditedRowData] = useState([]);
 
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [fetchDataModal, setFetchDataModal] = useState(false);
 
   const [Subjects, setSubjects] = useState([]);
-  const [
-    selectedAssignementUploadSubject,
-    setSelectedAssignementUploadSubject,
-  ] = useState("");
-  const [selectedUnitTestUploadSubject, setSelectedUnitTestUploadSubject] =
-    useState("");
-
+  const [selectedAssignementUploadSubject,setSelectedAssignementUploadSubject,] = useState("");
+  const [selectedUnitTestUploadSubject, setSelectedUnitTestUploadSubject] = useState("");
+  const [teacherdetail, setTeacherDetails] = useState([]);
   const [showModal, setShowModal] = useState(false);
   const [submissionTicketData, setSubmissionTicketData] = useState({
     academicYear: "",
@@ -132,6 +130,42 @@ const AdminDashboard = () => {
 
     fetchSSTData();
   }, []);
+
+  useEffect(() => {
+    const token = localStorage.getItem("SSTToken");
+
+    // Check if teacherdetails is already present
+    const fetchData = async () => {
+        if (Object.keys(teacherdetail).length > 0) {
+            return;
+        }
+        try {
+          setLoadingTop(true);
+            const response = await fetch(`${baseurl}/classes/assigned`, {
+                method: "GET",
+                headers: {
+                    "Content-Type": "application/json",
+                    "x-auth-token": token,
+                },
+            });
+            if (!response.ok) {
+                throw new Error('Failed to fetch data');
+            }
+            const data = await response.json();
+            console.log(data);
+            setTeacherDetails(data);
+        } catch (error) {
+            console.error('Error fetching data:', error);
+        }
+        setLoadingTop(false);
+    };
+
+    fetchData();
+    
+}, [teacherdetail]);
+
+
+
 
   const generateBatchOptions = () => {
     if (selectedYear && selectedDivision) {
@@ -243,6 +277,27 @@ const AdminDashboard = () => {
   };
 
   const handleGeneratePDF = (selectedDefaulterList) => {
+    let metric = selectedDefaulterList;
+    // if (selectedDefaulterList === "Unit Test 1") {
+    //   metric = "ut1Alternate";
+    // } else if (selectedDefaulterList === "Unit Test 2") {
+    //   metric = "ut2Alternate";
+    // } else if (selectedDefaulterList === "Attendance") {
+    //   metric = "attendanceAlternate";
+    // } else if (selectedDefaulterList === "Overall") {
+    //   metric = "overall";
+    // }
+    // else if(selectedDefaulterList === "Assignments"){
+    //   metric = "assignmentsc";
+    // }
+    // else {
+    //   metric = "overall";
+    // }
+    console.log(tableData);
+    // if (!tableData[0][metric]) {
+    //   alert(`Table doesn't have field ${selectedDefaulterList}`);
+    //   return;
+    // }
     const doc = new jsPDF();
     doc.setFontSize(12);
 
@@ -284,18 +339,7 @@ const AdminDashboard = () => {
     doc.setFont("normal");
     let yOffset = 66;
 
-    let metric;
-    if (selectedDefaulterList === "Unit Test 1") {
-      metric = "ut1Alternate";
-    } else if (selectedDefaulterList === "Unit Test 2") {
-      metric = "ut2Alternate";
-    } else if (selectedDefaulterList === "Attendance") {
-      metric = "attendanceAlternate";
-    } else if (selectedDefaulterList === "Overall") {
-      metric = "overall";
-    } else {
-      metric = "overall";
-    }
+    
 
     const defaulters = tableData.filter((data) => !data[metric]);
 
@@ -337,12 +381,74 @@ const AdminDashboard = () => {
     setLoading(true);
 
     const SSTToken = localStorage.getItem("SSTToken");
-
+    const bat =  document.getElementById("selectedBatch");
+    console.log("bat",bat);
     try {
       let endpoint = `${baseurl}/records/batch/${selectedBatch}/subject/${selectedSubject}`;
 
       if (selectedBatch === "Entire Class") {
         endpoint = `${baseurl}/records/class/${selectedYear}${selectedDivision}/subject/${selectedSubject}`;
+      }
+
+      const response = await fetch(endpoint, {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          "x-auth-token": ` ${SSTToken}`,
+        },
+      });
+
+      if (response.ok) {
+        const userData = await response.json();
+        console.log("res", userData);
+        setTableData(generateDummyData(userData));
+        setLoading(false);
+        setShowTable(true);
+      } else {
+        console.error("Failed to fetch data");
+      }
+    } catch (error) {
+      console.error("Error fetching data:", error);
+    } finally {
+      setLoading(false); // Set loading back to false after the data is fetched
+    }
+  };
+
+  const handleSubmitdirect = async (selectedData) => {
+    setShowTable(false);
+    setLoading(true);
+    var selectedclasss,classType,batchNumber,seletedb = "Entire Class",sub;
+    if(selectedData.class){
+       selectedclasss = selectedData.class;
+       classType = selectedclasss.substring(0, 2);
+       batchNumber = selectedclasss.substring(2); 
+      setSelectedYear(classType);
+      setSelectedDivision(batchNumber);
+    }
+
+    if(selectedData.batch){
+       seletedb = selectedData.batch;
+      setSelectedBatch(seletedb);
+    }
+    else{
+      setSelectedBatch('Entire Class');
+    }
+
+    if(selectedData.practical){
+       sub = selectedData.practical;
+      setSelectedSubject(sub);
+    }
+    else if(selectedData.theory){
+       sub = selectedData.theory;
+      setSelectedSubject(sub);
+    }
+
+    const SSTToken = localStorage.getItem("SSTToken");
+    try {
+      let endpoint = `${baseurl}/records/batch/${seletedb}/subject/${sub}`;
+
+      if (seletedb === "Entire Class") {
+        endpoint = `${baseurl}/records/class/${selectedclasss}/subject/${sub}`;
       }
 
       const response = await fetch(endpoint, {
@@ -553,7 +659,7 @@ const AdminDashboard = () => {
     const SSTToken = localStorage.getItem("SSTToken");
 
     try {
-      const response = await fetch(`${baseurl}/submit/classcoordinators`, {
+      const response = await fetch(`${baseurl}/submit/class_coordinators`, {
         method: "POST",
         body: formData,
         headers: {
@@ -640,7 +746,7 @@ const AdminDashboard = () => {
     const SSTToken = localStorage.getItem("SSTToken");
 
     try {
-      const response = await fetch(`${baseurl}/submit/seminars`, {
+      const response = await fetch(`${baseurl}/submit/te_seminars`, {
         method: "POST",
         body: formData,
         headers: {
@@ -669,7 +775,7 @@ const AdminDashboard = () => {
     const SSTToken = localStorage.getItem("SSTToken");
 
     try {
-      const response = await fetch(`${baseurl}/submit/projects`, {
+      const response = await fetch(`${baseurl}/submit/be_projects`, {
         method: "POST",
         body: formData,
         headers: {
@@ -893,60 +999,50 @@ const AdminDashboard = () => {
   };
 
   const selectAllAssignments = () => {
-      const updatedData = tableData.map(data => ({
-        ...data,
-        assignmentsc: true
+    const updatedData = tableData.map(data => ({
+      ...data,
+      assignmentsc: true
     }));
     setTableData(updatedData);
     const updatedAssignmentsData = updatedData.map(data => ({
-        rollNo: data.rollNo,
-        allCompleted: data.assignmentsc
+      rollNo: data.rollNo,
+      allCompleted: data.assignmentsc
     }));
 
     setUpdatedAssignments(updatedAssignmentsData);
     //SubmitUpdatedAssignment();
   };
 
-  const fetchData = async () => {
-    setLoading(true);
+  const fetchData = async (field) => {
+    setLoadingTop(true);
     try {
       const token = localStorage.getItem("SSTToken");
-      const urls = [
-        `${baseurl}/fetch/classes`,
-        `${baseurl}/fetch/students`,
-        `${baseurl}/fetch/curriculum`,
-        `${baseurl}/fetch/attendance`,
-      ];
-
-      const requests = urls.map((url) =>
-        fetch(url, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "x-auth-token": token,
-          },
-        })
-      );
-
-      const responses = await Promise.all(requests);
-      const data = await Promise.all(
-        responses.map((response) => response.json())
-      );
-      data.forEach((item) => {
-        if (Array.isArray(item)) {
-          item.forEach((subItem) => {
-            alert(subItem.message);
-          });
-        } else {
-          alert(item.message);
-        }
+      const response = await fetch(`${baseurl}/fetch/${field}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-auth-token': token
+        },
+        body: JSON.stringify({}),
       });
+      const data = await response.json();
+      // Handle the response data
+      console.log(data);
+      if (response.ok) {
+        alert(data.message);
+      }
+      else {
+        alert(data.message);
+
+      }
     } catch (error) {
       console.error("Error fetching data:", error);
+      alert("Error fetching data:", error);
       // Handle error
     }
-    setLoading(false);
+    setLoadingTop(false);
   };
+
 
   const handleSSTInputChange = (e) => {
     const { name, value } = e.target;
@@ -1018,6 +1114,36 @@ const AdminDashboard = () => {
     setLoadingTop(false);
   };
 
+  const handleDataSelection = (selectedData) => {
+    console.log("Selected data:", selectedData);
+    if(selectedData.class){
+      const selectedclass = selectedData.class;
+      const classType = selectedclass.substring(0, 2);
+      const batchNumber = selectedclass.substring(2); 
+      setSelectedYear(classType);
+      setSelectedDivision(batchNumber);
+    }
+
+    if(selectedData.batch){
+      const seletedb = selectedData.batch;
+      setSelectedBatch(seletedb);
+    }
+    else{
+      setSelectedBatch('Entire Class');
+    }
+
+    if(selectedData.practical){
+      const sub = selectedData.practical;
+      setSelectedSubject(sub);
+    }
+    else if(selectedData.theory){
+      const sub = selectedData.theory;
+      setSelectedSubject(sub);
+    }
+    handleSubmit();
+  };
+  
+
   const openModal = () => {
     setIsModalOpen(true);
   };
@@ -1035,9 +1161,20 @@ const AdminDashboard = () => {
     setShowModal(false);
   };
 
+  const openFetchDataModal = () => {
+    setFetchDataModal(true);
+  };
+
+  const closeFetchDataModal = () => {
+    setFetchDataModal(false);
+  };
+
+
+
   //console.log("edited row", editedRowData);
   //console.log(submissionTicketData);
   console.log(updatedAssignments);
+  console.log(fetchDataModal);
   return (
     <div className="admin-dashboard-container mx-3 p-4 bg-blue-100 min-h-screen rounded-md">
       <div className="flex flex-wrap sm:space-x-4 sm:space-y-0 space-y-4 mb-4">
@@ -1045,9 +1182,8 @@ const AdminDashboard = () => {
         {/* <div className="flex space-x-6 mb-4"> */}
 
         <div
-          className={`input-container border border-black rounded-lg p-4 flex-none flex items-center ${
-            !selectedYear && "border-red-500"
-          }`}
+          className={`input-container border border-black rounded-lg p-4 flex-none flex items-center ${!selectedYear && "border-red-500"
+            }`}
         >
           <label className="text-xl font-bold text-gray-800 inline-block mr-4">
             Year:
@@ -1067,9 +1203,8 @@ const AdminDashboard = () => {
         </div>
 
         <div
-          className={`input-container border border-black rounded-lg p-4 flex-none flex items-center ${
-            !selectedDivision && "border-red-500"
-          }`}
+          className={`input-container border border-black rounded-lg p-4 flex-none flex items-center ${!selectedDivision && "border-red-500"
+            }`}
         >
           <label className="text-xl font-bold text-gray-800 inline-block mr-4">
             Division:
@@ -1089,9 +1224,8 @@ const AdminDashboard = () => {
         </div>
 
         <div
-          className={`input-container border border-black rounded-lg p-4 flex-none flex items-center ${
-            !selectedBatch && "border-red-500"
-          }`}
+          className={`input-container border border-black rounded-lg p-4 flex-none flex items-center ${!selectedBatch && "border-red-500"
+            }`}
         >
           <label className="text-xl font-bold text-gray-800 inline-block mr-4">
             Batch:
@@ -1112,9 +1246,8 @@ const AdminDashboard = () => {
         </div>
 
         <div
-          className={`input-container border border-black rounded-lg p-4 flex-none flex items-center ${
-            !selectedSubject && "border-red-500"
-          }`}
+          className={`input-container border border-black rounded-lg p-4 flex-none flex items-center ${!selectedSubject && "border-red-500"
+            }`}
         >
           <label className="text-xl font-bold text-gray-800 inline-block mr-4">
             Subject:
@@ -1142,11 +1275,10 @@ const AdminDashboard = () => {
           </select>
         </div>
         <button
-          className={`bg-blue-500 text-white p-2 rounded-md ${
-            isSubmitDisabled
-              ? "cursor-not-allowed opacity-50"
-              : "cursor-pointer"
-          } `}
+          className={`bg-blue-500 text-white p-2 rounded-md ${isSubmitDisabled
+            ? "cursor-not-allowed opacity-50"
+            : "cursor-pointer"
+            } `}
           disabled={isSubmitDisabled}
           onClick={handleSubmit}
         >
@@ -1154,9 +1286,8 @@ const AdminDashboard = () => {
         </button>
         <div className="relative inline-block">
           <button
-            className={`bg-green-500 text-white p-1 rounded-md cursor-pointer ${
-              isSubmitDisabled ? "cursor-not-allowed opacity-50" : ""
-            } w-full h-full`}
+            className={`bg-green-500 text-white p-1 rounded-md cursor-pointer ${isSubmitDisabled ? "cursor-not-allowed opacity-50" : ""
+              } w-full h-full`}
             disabled={isSubmitDisabled}
             onClick={() => setShowMenu(!showMenu)}
           >
@@ -1167,25 +1298,31 @@ const AdminDashboard = () => {
             <div className="absolute left-1/2 transform -translate-x-1/2 mt-2 py-2 w-32 bg-white border rounded-md shadow-lg">
               <button
                 className="block w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                onClick={() => handleGeneratePDF("Unit Test 1")}
+                onClick={() => handleGeneratePDF("ut1Alternate")}
               >
                 Unit Test 1
               </button>
               <button
                 className="block w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                onClick={() => handleGeneratePDF("Unit Test 2")}
+                onClick={() => handleGeneratePDF("ut2Alternate")}
               >
                 Unit Test 2
               </button>
               <button
                 className="block w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                onClick={() => handleGeneratePDF("Attendance")}
+                onClick={() => handleGeneratePDF("attendanceAlternate")}
               >
                 Attendance
               </button>
               <button
                 className="block w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                onClick={() => handleGeneratePDF("Overall")}
+                onClick={() => handleGeneratePDF("assignmentsc")}
+              >
+                Assignments 
+              </button>
+              <button
+                className="block w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                onClick={() => handleGeneratePDF("overall")}
               >
                 Overall
               </button>
@@ -1193,13 +1330,15 @@ const AdminDashboard = () => {
           )}
         </div>
         <button
-          className={`bg-green-500 text-white p-1 rounded-md cursor-pointer `}
-          onClick={fetchData}
+          className={`bg-green-500 text-white p-1 rounded-md cursor-pointer ${isSubmitDisabled ? "cursor-not-allowed opacity-50" : ""}`}
+          onClick={openFetchDataModal}
+          disabled={isSubmitDisabled}
         >
           Fetch Data <DownloadIcon className="ml-6 w-5 h-5" />
         </button>
         <button
-          className={`bg-green-500 text-white p-1 rounded-md cursor-pointer`}
+          className={`bg-green-500 text-white p-1 rounded-md cursor-pointer ${isSubmitDisabled ? "cursor-not-allowed opacity-50" : ""}`}
+          disabled={isSubmitDisabled}
           onClick={openModal}
         >
           Upload <br />
@@ -1326,11 +1465,11 @@ const AdminDashboard = () => {
             <p className="mb-4">
               Demo File:{" "}
               <a
-                href="/Assignments Example - WAD N9.xlsx"
+                href="/Assignments Example - WAD K9.xlsx"
                 download
                 className="text-blue-500"
               >
-                Assignments Example WAD.xlsx
+                Assignments Example WAD K9.xlsx
               </a>
             </p>
             <div className="flex justify-between items-center mb-4">
@@ -1386,9 +1525,8 @@ const AdminDashboard = () => {
               <label className="mr-2">Select Subject:</label>
               <select
                 name="upload-assignement-subject"
-                className={`bg-white border rounded-lg hover:border-gray-500 py-2 px-4 text-gray-700 leading-tight ${
-                  !selectedAssignementUploadSubject && "border-red-500"
-                }`}
+                className={`bg-white border rounded-lg hover:border-gray-500 py-2 px-4 text-gray-700 leading-tight ${!selectedAssignementUploadSubject && "border-red-500"
+                  }`}
                 value={selectedAssignementUploadSubject}
                 onChange={(e) =>
                   setSelectedAssignementUploadSubject(e.target.value)
@@ -1468,9 +1606,8 @@ const AdminDashboard = () => {
               <label className="mr-2">Select Subject:</label>
               <select
                 name="upload-utmarks-subject"
-                className={`bg-white border rounded-lg hover:border-gray-500 py-2 px-4 text-gray-700 leading-tight ${
-                  !selectedUnitTestUploadSubject && "border-red-500"
-                }`}
+                className={`bg-white border rounded-lg hover:border-gray-500 py-2 px-4 text-gray-700 leading-tight ${!selectedUnitTestUploadSubject && "border-red-500"
+                  }`}
                 value={selectedUnitTestUploadSubject}
                 onChange={(e) =>
                   setSelectedUnitTestUploadSubject(e.target.value)
@@ -1871,16 +2008,92 @@ const AdminDashboard = () => {
       </Modal>
 
       {/* Display message when table is not showing */}
-      {!showTable && !loading && (
-        <div className="flex justify-center items-center h-full">
-          <div
-            className="p-4 bg-white rounded-md"
-            style={{ marginTop: "30vh" }}
-          >
-            <p className="text-gray-500">Please select the input fields</p>
-          </div>
-        </div>
-      )}
+      {!showTable && !loading && teacherdetail && (
+  <div className="flex justify-center items-center h-full">
+    <div className="p-4 bg-white rounded-md" style={{ marginTop: "10vh", maxHeight: "50vh", overflowY: "auto" }}>
+    <h2 className="text-lg font-medium mb-2">You are assigned to :</h2>
+
+    {teacherdetail.practicalBatches && teacherdetail.practicalBatches.length === 0 && (
+        <p className="font-semibold">Practical Batches: Not Assigned</p>
+    )}
+    {teacherdetail.practicalBatches && teacherdetail.practicalBatches.length > 0 && (
+        <>
+            <p className="font-semibold">Practical Batches:</p>
+            {teacherdetail.practicalBatches.map(batch => (
+                <button
+                    key={`${batch.year}-${batch.class}-${batch.batch}`}
+                    className="block py-2 px-4 my-2 bg-blue-500 text-white rounded-md"
+                    onClick={() => handleSubmitdirect(batch)}
+                >
+                    Year: {batch.year}, Class: {batch.class}, Batch: {batch.batch}, Practical: {batch.practical}
+                </button>
+            ))}
+        </>
+    )}
+
+    {teacherdetail.theoryClasses && teacherdetail.theoryClasses.length === 0 && (
+        <p className="font-semibold">Theory Classes: Not Assigned</p>
+    )}
+    {teacherdetail.theoryClasses && teacherdetail.theoryClasses.length > 0 && (
+        <>
+            <p className="font-semibold">Theory Classes:</p>
+            {teacherdetail.theoryClasses.map(batch => (
+                <button
+                    key={`${batch.year}-${batch.class}`}
+                    className="block py-2 px-4 my-2 bg-blue-500 text-white rounded-md"
+                    onClick={() => handleSubmitdirect(batch)}
+                >
+                    Year: {batch.year}, Class: {batch.class}, Theory: {batch.theory}
+                </button>
+            ))}
+        </>
+    )}
+
+    {teacherdetail.coordinatingClasses && teacherdetail.coordinatingClasses.length === 0 && (
+        <p className="font-semibold">Coordinating Classes: Not Assigned</p>
+    )}
+    {teacherdetail.coordinatingClasses && teacherdetail.coordinatingClasses.length > 0 && (
+        <>
+            <p className="font-semibold">Coordinating Classes:</p>
+            {teacherdetail.coordinatingClasses.map(batch => (
+                <button
+                    key={`${batch.year}-${batch.class}`}
+                    className="block py-2 px-4 my-2 bg-blue-500 text-white rounded-md"
+                    onClick={() => handleSubmitdirect(batch)}
+                >
+                    Year: {batch.year}, Class: {batch.class}
+                </button>
+            ))}
+        </>
+    )}
+
+    {teacherdetail.mentoringBatches && teacherdetail.mentoringBatches.length === 0 && (
+        <p className="font-semibold">Mentoring Batches: Not Assigned</p>
+    )}
+    {teacherdetail.mentoringBatches && teacherdetail.mentoringBatches.length > 0 && (
+        <>
+            <p className="font-semibold">Mentoring Batches:</p>
+            {teacherdetail.mentoringBatches.map(batch => (
+                <button
+                    key={`${batch.year}-${batch.class}-${batch.batch}`}
+                    className="block py-2 px-4 my-2 bg-blue-500 text-white rounded-md"
+                    onClick={() => handleSubmitdirect(batch)}
+                >
+                    Year: {batch.year}, Class: {batch.class}, Batch: {batch.batch}
+                </button>
+            ))}
+        </>
+    )}
+
+    <p className="text-gray-500 mt-4">Please select the input fields</p>
+</div>
+
+
+
+  </div>
+)}
+
+
 
       {loading && (
         <div className="flex justify-center items-center h-20">
@@ -2154,6 +2367,72 @@ const AdminDashboard = () => {
             </form>
           </div>
         </div>
+      )}
+
+      {fetchDataModal && (
+        <Modal
+          isOpen={fetchDataModal}
+          onRequestClose={closeFetchDataModal}
+          className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-white rounded-lg p-8 shadow-lg"
+          overlayClassName="fixed inset-0 bg-black bg-opacity-50"
+        >
+          <div className="flex justify-end">
+            <button
+              className="text-red-500 hover:text-red-700"
+              onClick={closeFetchDataModal}
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                className="h-6 w-6"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M6 18L18 6M6 6l12 12"
+                />
+              </svg>
+            </button>
+          </div>
+          <div className="flex justify-center items-center space-x-4">
+            <button
+              className="bg-blue-500 text-white py-2 px-4 rounded-lg"
+              onClick={() => fetchData("all")}
+            >
+              Fetch All
+            </button>
+          </div>
+          <div className="flex justify-center items-center mt-4">
+            <label htmlFor="fetchOption" className="font-semibold mr-2">Fetch:</label>
+            <select id="fetchOption" className="bg-white border border-gray-300 rounded-md px-4 py-2">
+              <option value="classes">Classes</option>
+              <option value="students">Students</option>
+              <option value="curriculum">Curriculum</option>
+              <option value="attendance">Attendance</option>
+              <option value="class_coordinators">Class Coordinators</option>
+              <option value="mentors">Mentors</option>
+              <option value="te_seminars">TE Seminars</option>
+              <option value="be_projects">BE Projects</option>
+              <option value="honors">Honors</option>
+            </select>
+            <button
+              className="bg-blue-500 text-white py-2 px-4 ml-8 rounded-lg"
+              onClick={() => fetchData(document.getElementById('fetchOption').value)}
+            >
+              Fetch
+            </button>
+
+          </div>
+          <div className="text-black mt-4">
+            <span className="font-semibold text-red-500">Note:</span><br />
+            Fetch All will fetch the data from all the <br /> google sheets into the database.<br />
+            You can also fetch fields individually.
+          </div>
+
+        </Modal>
       )}
 
       {/* Table Section */}

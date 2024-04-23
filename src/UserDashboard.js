@@ -8,6 +8,8 @@ const UserDashboard = () => {
   const [practicalData, setPracticalData] = useState([]);
   const [loading, setLoading] = useState(true); // Track loading state
   const [userD, setuserD] = useState();
+  const [TicketDetails, setTicketDetails] = useState(null);
+
   const baseurl = 'https://smart-submission-ticket.gopalsaraf.com/api/v2';
 
   // Get SSTToken from local storage and set it in state
@@ -16,6 +18,27 @@ const UserDashboard = () => {
     if (token) {
       setSSTToken(token);
     }
+  }, []);
+
+  useEffect(() => {
+    if (!TicketDetails) {
+
+    const fetchData = async () => {
+      try {
+        const response = await fetch(`${baseurl}/records/ticket`);
+        if (!response.ok) {
+          throw new Error('Failed to fetch data');
+        }
+        const data = await response.json();
+        setTicketDetails(data);
+        console.log('Ticket details fetched successfully');
+      } catch (error) {
+        console.error('Error fetching ticket details:', error);
+      }
+    };
+
+    fetchData();
+  }
   }, []);
 
   // Fetch user data from the backend
@@ -48,20 +71,27 @@ const UserDashboard = () => {
 
   // Generate dummy data for the table based on user data
   const generateDummyData = (userData) => {
-    const noofassignments = userData.assignment;
-    return userData.subjects.theory.map((subject) => ({
-      name: subject.title,
-      assignment: noofassignments ? noofassignments : 0,
-      assignmentMarks: noofassignments ? noofassignments.marks : [],
-      unitTest1Marks: userData.unitTests[subject.title]?.ut1 ?? 'NA',
-      exAssmt1: userData.unitTests[subject.title]?.ut1Alternate ?? false,
-      unitTest2Marks: userData.unitTests[subject.title]?.ut2 ?? 'NA',
-      exAssmt2: userData.unitTests[subject.title]?.ut2Alternate ?? false,
-      attendancePercentage: userData.attendance,
-      letter: userData.attendanceAlternate,
-      overall: false // Placeholder for now, replace with actual logic
-    }));
+    return userData.subjects.theory.map((subject) => {
+      const noofassignments = userData.assignment;
+      const lett = userData.attendanceAlternate;
+      const ut2alt = userData.unitTests[subject.title]?.ut2Alternate ?? false;
+      const ut1alt = userData.unitTests[subject.title]?.ut1Alternate ?? false;
+      const ov = lett && ut2alt && ut1alt;
+      return {
+        name: subject.title,
+        assignment: noofassignments ? noofassignments : 0,
+        assignmentMarks: noofassignments ? noofassignments.marks : [],
+        unitTest1Marks: userData.unitTests[subject.title]?.ut1 ?? 'NA',
+        exAssmt1: userData.unitTests[subject.title]?.ut1Alternate ?? false,
+        unitTest2Marks: userData.unitTests[subject.title]?.ut2 ?? 'NA',
+        exAssmt2: userData.unitTests[subject.title]?.ut2Alternate ?? false,
+        attendancePercentage: userData.attendance,
+        letter: lett,
+        overall: ov
+      };
+    });
   };
+  
 
   const generatePracticalData = (userData) => {
     const practicalSubjects = userData.subjects.practical;
@@ -254,7 +284,7 @@ const UserDashboard = () => {
       <div className="flex justify-end mb-4">
         <button
           className="bg-green-500 my-10 mx-10 text-white py-2 px-4 rounded"
-          onClick={() => navigate('/SubmissionT', { state: { userD } })}
+          onClick={() => navigate('/SubmissionT', { state: { userD ,TicketDetails} })}
           >
           Export as PDF
         </button>

@@ -1,15 +1,62 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from './AuthContext';
+import { useNavigate } from 'react-router-dom';
 
 function Navbar() {
   const { isLoggedIn, logout } = useAuth();
 
+  const baseurl = "https://smart-submission-ticket.gopalsaraf.com/api/v2";
+  const navigate = useNavigate();
+
   const handleLogout = () => {
-    // Clear the JWT token from local storage
+    console.log("i am here");
+    const token = localStorage.getItem("SSTToken");
+
+    const requestOptions = {
+      method: "DELETE",
+      headers: {
+        "Content-Type": "application/json",
+        "x-auth-token": token,
+      },
+    };
+    
+    fetch(`${baseurl}/login`, requestOptions)
+      .then((response) => response.text())
+      .then((result) => console.log(result))
+      .catch((error) => console.error(error));
+    console.log(requestOptions);
+    // console.log(result);
+    // console.log(error);
+      // try {
+      //   const response =  fetch(`${baseurl}/login`, {
+      //     method: "DELETE",
+      //     headers: {
+      //       "Content-Type": "application/json",
+      //       "x-auth-token": token,
+      //     },
+      //   });
+
+      //  if(response.ok){
+      //   console.log("yes");
+      //  }
+      //  else{
+      //   console.log("No");
+      //  }
+    
+      // } catch (error) {
+      //   console.error("Error deleting login:", error);
+      // }
+    
+    // deleteLogin();
+        // Clear the JWT token from local storage
+
     logout();
+    
     // Redirect to Home after logout
-    window.location.href = '/'; // Use window.location.href to force a full page reload
+    //window.location.href = '/'; // Use window.location.href to force a full page reload
+    navigate('/Home');
+
   };
 
   return (

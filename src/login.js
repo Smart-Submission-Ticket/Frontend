@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState,useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from './AuthContext';
+import AuthService from './AuthService';
 
 function Login() {
   const [email, setEmail] = useState('');
@@ -11,6 +12,20 @@ function Login() {
   const navigate = useNavigate();
   const { login } = useAuth();
 
+  useEffect(() => {
+    const checkAuthentication = () => {
+      if (AuthService.isAuthenticated()) {
+        const userType = localStorage.getItem('SSTusertype')
+        if (userType==='Teacher') {
+          navigate('/AdminPage');
+        } else if(userType==='Student'){
+          navigate('/UserPage');
+        }
+      }
+    };
+
+    checkAuthentication();
+  }, [navigate]);
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
