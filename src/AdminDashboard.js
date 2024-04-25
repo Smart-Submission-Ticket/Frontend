@@ -2067,7 +2067,7 @@ const AdminDashboard = () => {
         </>
     )}
 
-    {teacherdetail.mentoringBatches && teacherdetail.mentoringBatches.length === 0 && (
+    {/* {teacherdetail.mentoringBatches && teacherdetail.mentoringBatches.length === 0 && (
         <p className="font-semibold">Mentoring Batches: Not Assigned</p>
     )}
     {teacherdetail.mentoringBatches && teacherdetail.mentoringBatches.length > 0 && (
@@ -2083,7 +2083,7 @@ const AdminDashboard = () => {
                 </button>
             ))}
         </>
-    )}
+    )} */}
 
     <p className="text-gray-500 mt-4">Please select the input fields</p>
 </div>

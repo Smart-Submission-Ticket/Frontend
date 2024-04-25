@@ -61,7 +61,7 @@ const UserDashboard = () => {
       } else {
         console.error('Failed to fetch data');
       }
-      console.log(response);
+      //console.log(response);
     } catch (error) {
       console.error('Error fetching data:', error);
     }
@@ -130,16 +130,62 @@ const UserDashboard = () => {
     return practicalTableData;
   };
 
+  const calculateTermWorkMarks = (userData) => {
+    let assignmentMarks = 0;
+    let unitTestMarks = 0;
+    let attendanceMarks = 0;
 
+    // Calculate assignment marks
+    let totalassignments =0;
+    userData.subjects.practical.forEach((subject) => {
+      const marks = userData.assignments[subject.title]?.marks ?? [];
+      console.log(marks,subject);
+      totalassignments += subject.noOfAssignments;
+      assignmentMarks += marks.reduce((acc, mark) => acc + (mark === 'NA' ? 0 : mark), 0);
+    });
+    console.log("total Assignment marks :",assignmentMarks);
+    const assignmentAverage = assignmentMarks / (totalassignments * 10);
+
+    // Calculate unit test marks
+    Object.keys(userData.unitTests).forEach((subject) => {
+      const ut1Mark = userData.unitTests[subject]?.ut1 ?? 'NA';
+      const ut2Mark = userData.unitTests[subject]?.ut2 ?? 'NA';
+      unitTestMarks += (ut1Mark === 'NA' ? 0 : ut1Mark) + (ut2Mark === 'NA' ? 0 : ut2Mark);
+  });
+  
+    console.log("ut marks",unitTestMarks);
+    const unitTestAverage = unitTestMarks / (userData.subjects.theory.length * 60);
+
+    // Calculate attendance marks
+    const attendancePercentage = userData.attendance;
+    if (attendancePercentage < 75) {
+      attendanceMarks = 0;
+    } else if (attendancePercentage >= 75 && attendancePercentage < 80) {
+      attendanceMarks = 4;
+    } else if (attendancePercentage >= 80 && attendancePercentage < 85) {
+      attendanceMarks = 8;
+    } else if (attendancePercentage >= 85 && attendancePercentage < 90) {
+      attendanceMarks = 12;
+    } else if (attendancePercentage >= 90 && attendancePercentage < 95) {
+      attendanceMarks = 16;
+    } else {
+      attendanceMarks = 20;
+    }
+
+    // Calculate total term work marks
+    const termWorkMarks = Math.floor((assignmentAverage * 60) + (unitTestAverage * 20) + attendanceMarks);
+    return termWorkMarks;
+  };
   useEffect(() => {
     if (SSTToken) {
       fetchDataFromBackend();
     }
   }, [SSTToken]);
 
+  const termWorkMarks = userD ? calculateTermWorkMarks(userD) : 0;
 
-  console.log(practicalData);
-  console.log(userD);
+ // console.log(practicalData);
+  //console.log(userD);
   return (
     <div className="admin-dashboard-container mx-5 p-4 bg-blue-100 rounded-md">
       <h1 className="text-3xl font-semibold mb-4 text-center">Submission status table</h1>
@@ -281,6 +327,10 @@ const UserDashboard = () => {
 
         </>
       )}
+       <div className="mt-8">
+        <h2 className="text-xl font-semibold mb-2">Term Work Marks</h2>
+        <p className="font-semibold">Total Term Work Marks: {termWorkMarks}/100</p>
+      </div>
       <div className="flex justify-end mb-4">
         <button
           className="bg-green-500 my-10 mx-10 text-white py-2 px-4 rounded"
