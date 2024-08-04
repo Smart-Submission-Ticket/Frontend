@@ -1,39 +1,38 @@
-import React, { useState,useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import AuthService from './AuthService';
-import { useAuth } from './AuthContext';
+import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import AuthService from "./AuthService";
+import { useAuth } from "./AuthContext";
+import baseurl from "./backend";
 
 function Register() {
-  const [email, setEmail] = useState('');
-  const [otp, setOtp] = useState('');
-  const [error, setError] = useState('');
+  const [email, setEmail] = useState("");
+  const [otp, setOtp] = useState("");
+  const [error, setError] = useState("");
   const [isEmailSubmitted, setIsEmailSubmitted] = useState(false);
   const [isOtpSent, setIsOtpSent] = useState(false);
   const [isOtpCorrect, setIsOtpCorrect] = useState(false);
-  const [userType, setUserType] = useState('Student');
+  const [userType, setUserType] = useState("Student");
   const [loadingtop, setLoadingTop] = useState(false); // Track loading state top one
 
   const [registrationInfo, setRegistrationInfo] = useState({
-    email: '',   //
-    password: '',
-    name: '',
-    rollNo: '', //
-    batch: '',  //
-    class: '',  //
-    year: '',   //
-    abcId: '',
-    token: '',  //
-    mobile: '' 
+    email: "", //
+    password: "",
+    name: "",
+    rollNo: "", //
+    batch: "", //
+    class: "", //
+    year: "", //
+    abcId: "",
+    token: "", //
+    mobile: "",
   });
 
   const [registrationInfoTeacher, setRegistrationInfoTeacher] = useState({
-    email: '',   //
-    password: '',
-    name: '',
-    token: '',  //
+    email: "", //
+    password: "",
+    name: "",
+    token: "", //
   });
-
-  const baseurl = 'https://smart-submission-ticket.gopalsaraf.com/api/v2';
 
   const navigate = useNavigate();
   const { login } = useAuth();
@@ -41,11 +40,11 @@ function Register() {
   useEffect(() => {
     const checkAuthentication = () => {
       if (AuthService.isAuthenticated()) {
-        const userType = localStorage.getItem('SSTusertype')
-        if (userType==='Teacher') {
-          navigate('/AdminPage');
-        } else if(userType==='Student'){
-          navigate('/UserPage');
+        const userType = localStorage.getItem("SSTusertype");
+        if (userType === "Teacher") {
+          navigate("/AdminPage");
+        } else if (userType === "Student") {
+          navigate("/UserPage");
         }
       }
     };
@@ -54,8 +53,8 @@ function Register() {
   }, [navigate]);
 
   const setRegistrationData = (data) => {
-    if (userType === 'Student') {
-      setRegistrationInfo(prevInfo => ({
+    if (userType === "Student") {
+      setRegistrationInfo((prevInfo) => ({
         ...prevInfo,
         rollNo: data.rollNo,
         class: data.class,
@@ -63,37 +62,31 @@ function Register() {
         year: data.year,
         batch: data.batch,
       }));
-    }
-    else if (userType === 'Teacher') {
+    } else if (userType === "Teacher") {
       console.log(email);
-      setRegistrationInfoTeacher(prevInfo => ({
+      setRegistrationInfoTeacher((prevInfo) => ({
         ...prevInfo,
         email: email,
       }));
+    } else {
+      console.log("Select one user type");
     }
-    else {
-      console.log('Select one user type');
-    }
-
   };
 
   const setRegistrationDataToken = (data) => {
-    if (userType === 'Student') {
-      setRegistrationInfo(prevInfo => ({
+    if (userType === "Student") {
+      setRegistrationInfo((prevInfo) => ({
         ...prevInfo,
         token: data.token,
       }));
-    }
-    else if (userType === 'Teacher') {
-      setRegistrationInfoTeacher(prevInfo => ({
+    } else if (userType === "Teacher") {
+      setRegistrationInfoTeacher((prevInfo) => ({
         ...prevInfo,
         token: data.token,
       }));
+    } else {
+      console.log("Select one user type");
     }
-    else {
-      console.log('Select one user type');
-    }
-
   };
 
   const handleRegistrationChange = (e) => {
@@ -113,17 +106,17 @@ function Register() {
     console.log(userType);
     setLoadingTop(true);
     try {
-      let url = '';
-      if (userType === 'Student') {
+      let url = "";
+      if (userType === "Student") {
         url = `${baseurl}/register/student/verify-email`;
-      } else if (userType === 'Teacher') {
+      } else if (userType === "Teacher") {
         url = `${baseurl}/register/teacher/verify-email`;
       }
       console.log(url);
       const response = await fetch(url, {
-        method: 'POST',
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify({ email }),
       });
@@ -131,58 +124,54 @@ function Register() {
       if (response.status === 200) {
         setIsOtpSent(true);
         setIsEmailSubmitted(true);
-        setError('');
-        console.log('Email sent successfully');
+        setError("");
+        console.log("Email sent successfully");
 
         // Update registrationInfo with rollNo and classDiv from data.student
         console.log(data.message);
         console.log(data.student);
         console.log(userType);
         // Update registrationInfo with rollNo and classDiv from data.student
-        if (userType === 'Student') {
+        if (userType === "Student") {
           setRegistrationData(data.student);
-        }
-        else if (userType === 'Teacher') {
+        } else if (userType === "Teacher") {
           setRegistrationData(data);
-        }
-        else {
-          console.log('Select one user type')
+        } else {
+          console.log("Select one user type");
         }
       } else {
-        throw new Error('This email is not in our database.');
+        throw new Error("This email is not in our database.");
       }
     } catch (error) {
       setError(data.message);
-      console.error('Error sending email:', error);
+      console.error("Error sending email:", error);
     }
     setLoadingTop(false);
-
   };
-
 
   const handleOTP = async (e) => {
     e.preventDefault();
     setLoadingTop(true);
 
     try {
-      setError('');
-      let url = '';
-      if (userType === 'Student') {
+      setError("");
+      let url = "";
+      if (userType === "Student") {
         url = `${baseurl}/register/student/verify-otp`;
-      } else if (userType === 'Teacher') {
+      } else if (userType === "Teacher") {
         url = `${baseurl}/register/teacher/verify-otp`;
       }
 
       const response = await fetch(url, {
-        method: 'POST',
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify({ email, otp }),
       });
 
       if (response.status === 200) {
-        setError('');
+        setError("");
         setIsOtpCorrect(true);
 
         const data = await response.json();
@@ -191,41 +180,45 @@ function Register() {
         setRegistrationDataToken(data);
         // AuthService.login(jwt_token);
         // login(jwt_token);
-
       } else {
-        throw new Error('Invalid OTP');
+        throw new Error("Invalid OTP");
       }
     } catch (error) {
-      setError('Invalid OTP. Please try again.');
-      console.error('Error verifying OTP:', error);
+      setError("Invalid OTP. Please try again.");
+      console.error("Error verifying OTP:", error);
     }
     setLoadingTop(false);
-
   };
-
 
   const handleCompleteRegistration = async (e) => {
     e.preventDefault();
     setLoadingTop(true);
     console.log(registrationInfoTeacher);
     try {
-      let url = '';
-      if (userType === 'Student') {
+      let url = "";
+      if (userType === "Student") {
         url = `${baseurl}/register/student`;
-        if (registrationInfo.mobile.length !== 10 || isNaN(registrationInfo.mobile)) {
-          alert('Mobile number must be exactly 10 digits long and contain only numbers.');
-          return; 
+        if (
+          registrationInfo.mobile.length !== 10 ||
+          isNaN(registrationInfo.mobile)
+        ) {
+          alert(
+            "Mobile number must be exactly 10 digits long and contain only numbers."
+          );
+          return;
         }
-      } else if (userType === 'Teacher') {
+      } else if (userType === "Teacher") {
         url = `${baseurl}/register/teacher`;
       }
-      
+
       const response = await fetch(url, {
-        method: 'POST',
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
-        body: JSON.stringify(userType === 'Student' ? registrationInfo : registrationInfoTeacher),
+        body: JSON.stringify(
+          userType === "Student" ? registrationInfo : registrationInfoTeacher
+        ),
       });
       console.log(response);
       if (response.status === 201) {
@@ -235,37 +228,33 @@ function Register() {
 
         // Store the JWT token
 
-        const token = response.headers.get('X-Auth-Token'); // Get the token from the response headers
-        localStorage.setItem('SSTToken', token); // Save the token to local storage with the key 'SSTToken'
+        const token = response.headers.get("X-Auth-Token"); // Get the token from the response headers
+        localStorage.setItem("SSTToken", token); // Save the token to local storage with the key 'SSTToken'
         console.log(token);
         login();
-        console.log('Registration successful!');
+        console.log("Registration successful!");
         console.log(userType);
-        if (userType === 'Student') {
-          localStorage.setItem('SSTusertype', 'Student'); 
-          navigate('/UserPage');
-        }
-        else if (userType === 'Teacher') {
-          localStorage.setItem('SSTusertype', 'Teacher'); 
-          navigate('/AdminPage');
-        }
-        else {
+        if (userType === "Student") {
+          localStorage.setItem("SSTusertype", "Student");
+          navigate("/UserPage");
+        } else if (userType === "Teacher") {
+          localStorage.setItem("SSTusertype", "Teacher");
+          navigate("/AdminPage");
+        } else {
           console.log("nope");
         }
-
-
       } else {
         // Handle errors from the backend
-        console.error('Registration failed.');
+        console.error("Registration failed.");
       }
     } catch (error) {
-      console.error('Error during registration:', error.message);
+      console.error("Error during registration:", error.message);
     }
-    console.log(userType === 'Student' ? registrationInfo : registrationInfoTeacher);
+    console.log(
+      userType === "Student" ? registrationInfo : registrationInfoTeacher
+    );
     setLoadingTop(false);
   };
-
-
 
   return (
     <div
@@ -278,17 +267,23 @@ function Register() {
       {!isOtpSent && !isEmailSubmitted && (
         <div className="flex-grow flex items-center justify-center">
           <div className="max-w-md w-full p-6 rounded-md shadow-lg bg-blue-100">
-            <h2 className="text-3xl font-semibold text-center text-gray-800 mb-6">Register</h2>
+            <h2 className="text-3xl font-semibold text-center text-gray-800 mb-6">
+              Register
+            </h2>
             <form onSubmit={handleSubmitEmail}>
               <div className="mb-4">
-                <label htmlFor="email" className="block text-sm font-medium text-gray-700">
+                <label
+                  htmlFor="email"
+                  className="block text-sm font-medium text-gray-700"
+                >
                   Email id:
                 </label>
                 <input
                   type="email"
                   id="email"
-                  className={`mt-1 block w-full rounded-md px-4 py-2 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 ${error && 'border-red-500'
-                    }`}
+                  className={`mt-1 block w-full rounded-md px-4 py-2 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 ${
+                    error && "border-red-500"
+                  }`}
                   placeholder="Enter your email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
@@ -298,7 +293,10 @@ function Register() {
               </div>
 
               <div className="mb-4">
-                <label htmlFor="userType" className="block text-sm font-medium text-gray-700">
+                <label
+                  htmlFor="userType"
+                  className="block text-sm font-medium text-gray-700"
+                >
                   Are you a student or a teacher?
                 </label>
                 <select
@@ -331,17 +329,23 @@ function Register() {
       {isOtpSent && !isOtpCorrect && (
         <div className="flex-grow flex items-center justify-center">
           <div className="max-w-md w-full p-6 rounded-md shadow-lg bg-blue-100">
-            <h2 className="text-3xl font-semibold text-center text-gray-800 mb-6">Enter OTP</h2>
+            <h2 className="text-3xl font-semibold text-center text-gray-800 mb-6">
+              Enter OTP
+            </h2>
             <form onSubmit={handleOTP}>
               <div className="mb-4">
-                <label htmlFor="otp" className="block text-sm font-medium text-gray-700">
+                <label
+                  htmlFor="otp"
+                  className="block text-sm font-medium text-gray-700"
+                >
                   OTP:
                 </label>
                 <input
                   type="text"
                   id="otp"
-                  className={`mt-1 block w-full rounded-md px-4 py-2 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 ${error && 'border-red-500'
-                    }`}
+                  className={`mt-1 block w-full rounded-md px-4 py-2 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 ${
+                    error && "border-red-500"
+                  }`}
                   placeholder="Enter OTP"
                   value={otp}
                   onChange={(e) => setOtp(e.target.value)}
@@ -367,12 +371,17 @@ function Register() {
       {isOtpCorrect && (
         <div className="flex-grow flex items-center justify-center">
           <div className="max-w-md w-full p-6 rounded-md shadow-lg bg-blue-100">
-            <h2 className="text-3xl font-semibold text-center text-gray-800 mb-6">Registration</h2>
+            <h2 className="text-3xl font-semibold text-center text-gray-800 mb-6">
+              Registration
+            </h2>
             <form onSubmit={handleCompleteRegistration}>
-              {userType === 'Teacher' ? (
+              {userType === "Teacher" ? (
                 <>
                   <div className="mb-4">
-                    <label htmlFor="name" className="block text-sm font-medium text-gray-700">
+                    <label
+                      htmlFor="name"
+                      className="block text-sm font-medium text-gray-700"
+                    >
                       Name:
                     </label>
                     <input
@@ -383,14 +392,20 @@ function Register() {
                       placeholder="Enter Name"
                       value={registrationInfoTeacher.name}
                       onChange={(e) =>
-                        setRegistrationInfoTeacher((prevInfo) => ({ ...prevInfo, name: e.target.value }))
+                        setRegistrationInfoTeacher((prevInfo) => ({
+                          ...prevInfo,
+                          name: e.target.value,
+                        }))
                       }
                       required
                     />
                   </div>
 
                   <div className="mb-4">
-                    <label htmlFor="password" className="block text-sm font-medium text-gray-700">
+                    <label
+                      htmlFor="password"
+                      className="block text-sm font-medium text-gray-700"
+                    >
                       Password:
                     </label>
                     <input
@@ -401,7 +416,10 @@ function Register() {
                       placeholder="Enter Password"
                       value={registrationInfoTeacher.password}
                       onChange={(e) =>
-                        setRegistrationInfoTeacher((prevInfo) => ({ ...prevInfo, password: e.target.value }))
+                        setRegistrationInfoTeacher((prevInfo) => ({
+                          ...prevInfo,
+                          password: e.target.value,
+                        }))
                       }
                       required
                     />
@@ -410,7 +428,10 @@ function Register() {
               ) : (
                 <>
                   <div className="mb-4">
-                    <label htmlFor="rollNo" className="block text-sm font-medium text-gray-700">
+                    <label
+                      htmlFor="rollNo"
+                      className="block text-sm font-medium text-gray-700"
+                    >
                       Roll No:
                     </label>
                     <input
@@ -427,7 +448,10 @@ function Register() {
                   </div>
 
                   <div className="mb-4">
-                    <label htmlFor="name" className="block text-sm font-medium text-gray-700">
+                    <label
+                      htmlFor="name"
+                      className="block text-sm font-medium text-gray-700"
+                    >
                       Name:
                     </label>
                     <input
@@ -443,7 +467,10 @@ function Register() {
                   </div>
 
                   <div className="mb-4">
-                    <label htmlFor="classDiv" className="block text-sm font-medium text-gray-700">
+                    <label
+                      htmlFor="classDiv"
+                      className="block text-sm font-medium text-gray-700"
+                    >
                       Class/Div:
                     </label>
                     <input
@@ -459,7 +486,10 @@ function Register() {
                     />
                   </div>
                   <div className="mb-4">
-                    <label htmlFor="batch" className="block text-sm font-medium text-gray-700">
+                    <label
+                      htmlFor="batch"
+                      className="block text-sm font-medium text-gray-700"
+                    >
                       Batch:
                     </label>
                     <input
@@ -474,7 +504,10 @@ function Register() {
                   </div>
 
                   <div className="mb-4">
-                    <label htmlFor="mobileNo" className="block text-sm font-medium text-gray-700">
+                    <label
+                      htmlFor="mobileNo"
+                      className="block text-sm font-medium text-gray-700"
+                    >
                       Mobile No:
                     </label>
                     <input
@@ -489,7 +522,10 @@ function Register() {
                     />
                   </div>
                   <div className="mb-4">
-                    <label htmlFor="abcId" className="block text-sm font-medium text-gray-700">
+                    <label
+                      htmlFor="abcId"
+                      className="block text-sm font-medium text-gray-700"
+                    >
                       ABC ID:
                     </label>
                     <input
@@ -505,7 +541,10 @@ function Register() {
                   </div>
 
                   <div className="mb-4">
-                    <label htmlFor="password" className="block text-sm font-medium text-gray-700">
+                    <label
+                      htmlFor="password"
+                      className="block text-sm font-medium text-gray-700"
+                    >
                       Password:
                     </label>
                     <input
@@ -521,11 +560,11 @@ function Register() {
                   </div>
                 </>
               )}
-               {loadingtop && (
+              {loadingtop && (
                 <div className="fixed top-0 left-0 w-full flex justify-center items-center z-50 mt-20">
-                <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-blue-500"></div>
-            </div>
-               )}
+                  <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-blue-500"></div>
+                </div>
+              )}
               <div className="text-center">
                 <button
                   type="submit"
@@ -538,9 +577,8 @@ function Register() {
           </div>
         </div>
       )}
-
     </div>
   );
 }
 
-export default Register; 
+export default Register;

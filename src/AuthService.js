@@ -1,10 +1,10 @@
 // AuthService.js
-const TOKEN_KEY = 'SSTToken';
+const TOKEN_KEY = "SSTToken";
 
 const AuthService = {
   login: () => {
     // Perform login logic here
-    localStorage.setItem(TOKEN_KEY, 'your_generated_jwt_token');
+    localStorage.setItem(TOKEN_KEY, "your_generated_jwt_token");
   },
   logout: () => {
     // Perform logout logic here

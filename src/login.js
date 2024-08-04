@@ -1,13 +1,14 @@
-import React, { useState,useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { useAuth } from './AuthContext';
-import AuthService from './AuthService';
+import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import { useAuth } from "./AuthContext";
+import AuthService from "./AuthService";
+import baseurl from "./backend";
 
 function Login() {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   //const [userType, setUserType] = useState('Student');
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
   const [loadingtop, setLoadingTop] = useState(false); // Track loading state top one
   const navigate = useNavigate();
   const { login } = useAuth();
@@ -15,11 +16,11 @@ function Login() {
   useEffect(() => {
     const checkAuthentication = () => {
       if (AuthService.isAuthenticated()) {
-        const userType = localStorage.getItem('SSTusertype')
-        if (userType==='Teacher') {
-          navigate('/AdminPage');
-        } else if(userType==='Student'){
-          navigate('/UserPage');
+        const userType = localStorage.getItem("SSTusertype");
+        if (userType === "Teacher") {
+          navigate("/AdminPage");
+        } else if (userType === "Student") {
+          navigate("/UserPage");
         }
       }
     };
@@ -28,22 +29,21 @@ function Login() {
   }, [navigate]);
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setError('');
+    setError("");
     const formData = {
       email,
       password,
     };
 
-    const baseurl = 'https://smart-submission-ticket.gopalsaraf.com/api/v2';
     // Determine the URL based on the user type
     //const url = userType === 'Student' ? `${baseurl}/api/login/student` : `${baseurl}/api/login/teacher`;
     const mixurl = `${baseurl}/login`;
     setLoadingTop(true);
     try {
       const response = await fetch(mixurl, {
-        method: 'POST',
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify(formData),
       });
@@ -52,32 +52,30 @@ function Login() {
       console.log(userData);
       console.log(response);
       if (response.ok) {
-        const token = response.headers.get('X-Auth-Token'); // Get the token from the response headers
-        localStorage.setItem('SSTToken', token); // Save the token to local storage with the key 'SSTToken'
+        const token = response.headers.get("X-Auth-Token"); // Get the token from the response headers
+        localStorage.setItem("SSTToken", token); // Save the token to local storage with the key 'SSTToken'
         console.log(token);
         login();
-        console.log('Login successful');
+        console.log("Login successful");
         //console.log('User Type:', userType);
-        
-        if (userData.role === 'teacher') {
-          localStorage.setItem('SSTusertype', 'Teacher'); 
-          navigate('/AdminPage');
-        } else if (userData.role === 'student') {
-          localStorage.setItem('SSTusertype', 'Student'); 
-          navigate('/UserPage');
+
+        if (userData.role === "teacher") {
+          localStorage.setItem("SSTusertype", "Teacher");
+          navigate("/AdminPage");
+        } else if (userData.role === "student") {
+          localStorage.setItem("SSTusertype", "Student");
+          navigate("/UserPage");
         }
       } else {
         setError(userData.message);
       }
       console.log(response);
     } catch (error) {
-      console.error('Login error:', error.message);
-      setError('Login failed. Please check your credentials.');
+      console.error("Login error:", error.message);
+      setError("Login failed. Please check your credentials.");
     }
     setLoadingTop(false);
   };
-
-
 
   return (
     <div
@@ -89,17 +87,23 @@ function Login() {
       {/* Login Form */}
       <div className="flex-grow flex items-center justify-center ">
         <div className="max-w-md w-full p-6  rounded-md shadow-lg bg-blue-100">
-          <h2 className="text-3xl font-semibold text-center text-gray-800 mb-6 ">Login</h2>
+          <h2 className="text-3xl font-semibold text-center text-gray-800 mb-6 ">
+            Login
+          </h2>
           <form onSubmit={handleSubmit}>
             <div className="mb-4">
-              <label htmlFor="email" className="block text-sm font-medium text-gray-700">
+              <label
+                htmlFor="email"
+                className="block text-sm font-medium text-gray-700"
+              >
                 Email
               </label>
               <input
                 type="email"
                 id="email"
-                className={`mt-1 block w-full rounded-md px-4 py-2 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 ${error && 'border-red-500'
-                  }`}
+                className={`mt-1 block w-full rounded-md px-4 py-2 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 ${
+                  error && "border-red-500"
+                }`}
                 placeholder="Enter your email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
@@ -108,7 +112,10 @@ function Login() {
               {error && <p className="text-red-500 text-sm mt-1">{error}</p>}
             </div>
             <div className="mb-4">
-              <label htmlFor="password" className="block text-sm font-medium text-gray-700">
+              <label
+                htmlFor="password"
+                className="block text-sm font-medium text-gray-700"
+              >
                 Password
               </label>
               <input
@@ -140,7 +147,7 @@ function Login() {
                 <button
                   type="button"
                   className="text-indigo-600 hover:underline"
-                  onClick={() => navigate('/Register')}
+                  onClick={() => navigate("/Register")}
                 >
                   Register
                 </button>
@@ -166,10 +173,10 @@ function Login() {
         </div>
       </div>
       {loadingtop && (
-                <div className="fixed top-0 left-0 w-full flex justify-center items-center z-50 mt-20">
-                <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-blue-500"></div>
-            </div>
-            )}
+        <div className="fixed top-0 left-0 w-full flex justify-center items-center z-50 mt-20">
+          <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-blue-500"></div>
+        </div>
+      )}
     </div>
   );
 }
