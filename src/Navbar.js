@@ -6,7 +6,6 @@ import baseurl from "./backend";
 
 function Navbar() {
   const { isLoggedIn, logout } = useAuth();
-
   const navigate = useNavigate();
 
   const handleLogout = () => {
@@ -26,35 +25,8 @@ function Navbar() {
       .then((result) => console.log(result))
       .catch((error) => console.error(error));
     console.log(requestOptions);
-    // console.log(result);
-    // console.log(error);
-    // try {
-    //   const response =  fetch(`${baseurl}/login`, {
-    //     method: "DELETE",
-    //     headers: {
-    //       "Content-Type": "application/json",
-    //       "x-auth-token": token,
-    //     },
-    //   });
-
-    //  if(response.ok){
-    //   console.log("yes");
-    //  }
-    //  else{
-    //   console.log("No");
-    //  }
-
-    // } catch (error) {
-    //   console.error("Error deleting login:", error);
-    // }
-
-    // deleteLogin();
-    // Clear the JWT token from local storage
 
     logout();
-
-    // Redirect to Home after logout
-    //window.location.href = '/'; // Use window.location.href to force a full page reload
     navigate("/Home");
   };
 
@@ -85,6 +57,23 @@ function Navbar() {
           <a href="https://pict.edu/about_us/" className="text-indigo-600 ml-4">
             About Us
           </a>
+          {/* Show AI Examiner and Doubt Solver only if logged in */}
+          {isLoggedIn && (
+            <>
+              <a
+                href="https://desired-mentally-katydid.ngrok-free.app/"
+                className="text-indigo-600 ml-4"
+              >
+                AI Examiner
+              </a>
+              <a
+                href="https://mature-implicitly-shiner.ngrok-free.app/"
+                className="text-indigo-600 ml-4"
+              >
+                Doubt Solver
+              </a>
+            </>
+          )}
           {isLoggedIn && (
             <button
               onClick={handleLogout}

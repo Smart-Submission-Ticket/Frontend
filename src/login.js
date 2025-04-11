@@ -59,7 +59,7 @@ function Login() {
         console.log("Login successful");
         //console.log('User Type:', userType);
 
-        if (userData.role === "teacher") {
+        if (userData.role === "teacher" || userData.role === "admin") {
           localStorage.setItem("SSTusertype", "Teacher");
           navigate("/AdminPage");
         } else if (userData.role === "student") {

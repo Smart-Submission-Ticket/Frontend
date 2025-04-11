@@ -37,7 +37,7 @@ function Home() {
 
       <div className="bg-white bg-opacity-75 p-8 max-w-md mx-auto rounded-md shadow-md text-center">
         <h1 className="text-2xl font-semibold mb-6">
-          Welcome to the automated submission ticket system of PICT!
+          Welcome to the centralized academic system of PICT!
         </h1>
 
         <div className="flex justify-between mb-4">
